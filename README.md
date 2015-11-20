@@ -8,3 +8,7 @@ Docker images to build all tarantool projects anywhere. Based in official docker
 * fedora 21
 * fedora 22
 * fedora 23
+
+### Plan
+* debian *
+* ubuntu *
