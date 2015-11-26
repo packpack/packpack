@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     sudo \
     fakeroot \
     debhelper \
-    cdbs
+    cdbs \
+    equivs
 
 RUN pip install debuilder
 

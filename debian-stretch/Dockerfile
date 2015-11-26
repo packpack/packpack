@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
     fakeroot \
     debhelper \
+    equivs \
     cdbs --fix-missing
 
 RUN pip install debuilder
