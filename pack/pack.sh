@@ -9,7 +9,6 @@ else
 fi
 
 if [ $# -eq 5 ] ; then
-    cp ../../build.sh .
     make build-$1 os=$2 dist=$3 branch=$4
     make export-$1 os=$2 dist=$3 repo=$5
 elif [ $# -eq 7 ] ; then
