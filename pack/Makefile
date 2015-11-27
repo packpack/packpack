@@ -4,7 +4,7 @@ all:
 build-rpm:
 	mkdir -p out
 	cp build.sh out/
-	docker run -v $(CURDIR)/out:/home/rpm/result tarantool/build:$(os)$(dist) sh /home/rpm/result/build.sh $(branch)
+	docker run -v $(CURDIR)/out:/home/rpm/result tarantool/build:$(os)$(dist) sh /home/rpm/result/build.sh $(branch) $(uri) $(product)
 
 export-rpm:
 	package_cloud push $(repo)/$(os)/$(dist)/SRPMS/ out/*.src.rpm --skip-errors

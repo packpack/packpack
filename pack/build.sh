@@ -1,14 +1,18 @@
 mkdir -p rpmbuild/SOURCES
 
-git clone -b $1 $GIT_REPO
-cd $PROJECT
+branch=$1
+git_url=$2
+project=$3
+
+git clone -b $branch $git_url
+cd $project
 git submodule update --init --recursive
-tar cvf `cat rpm/${PROJECT}.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
-sudo yum-builddep -y rpm/$PROJECT.spec
+tar cvf `cat rpm/${project}.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
+sudo yum-builddep -y rpm/$project.spec
 
 cp *.tar.gz ../rpmbuild/SOURCES/
 cp -f rpm/*.ini ../rpmbuild/SOURCES/
-rpmbuild -ba rpm/$PROJECT.spec
+rpmbuild -ba rpm/$project.spec
 cd ../
 
 # move source rpm
