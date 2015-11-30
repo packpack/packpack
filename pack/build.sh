@@ -16,8 +16,9 @@ rpmbuild -ba rpm/$project.spec
 cd ../
 
 # move source rpm
-sudo mv /home/rpm/rpmbuild/SRPMS/*.src.rpm result/
+sudo mv -f /home/rpm/rpmbuild/SRPMS/*.src.rpm result/
 
 # move rpm, devel, debuginfo
-sudo mv /home/rpm/rpmbuild/RPMS/x86_64/*.rpm result/
+sudo mv -f /home/rpm/rpmbuild/RPMS/x86_64/*.rpm result/
+sudo mv -f /home/rpm/rpmbuild/RPMS/noarch/*.rpm result/
 ls -liah result
