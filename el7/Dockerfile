@@ -2,7 +2,7 @@ FROM centos:7
 
 RUN yum -y groupinstall 'Development Tools'
 RUN yum -y install yum-utils rpm-build
-RUN yum -y install git gcc gcc-c++ kernel-devel make automake tar
+RUN yum -y install git gcc gcc-c++ kernel-devel make automake tar python-setuptools
 
 RUN yum -y install sudo
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
