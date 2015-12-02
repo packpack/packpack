@@ -9,7 +9,6 @@ luarocks_export(){
 
 luarocks_deb(){
     echo '[Lua module detected]'
-    sudo apt-get install  -y lua5.1 rpm alien
     git clone "${taranrocks_repo}"
     ./taranrocks/src/bin/luarocks build --build-deb `ls *.rockspec | head -n 1`
 }
@@ -30,6 +29,7 @@ if [ -d $4/debian ] ; then
     sudo mv -f distros/$2_amd64/builddir/*.gz result/
     sudo mv -f distros/$2_amd64/builddir/*.xz result/
 elif [ `ls -1 $4/ | grep .rockspec | wc -l` != "0" ] ; then
+    cd $4
     luarocks_deb
     luarocks_export
     cd ../

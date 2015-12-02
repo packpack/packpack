@@ -13,7 +13,6 @@ luarocks_export(){
 luarocks_rpm(){
     echo '[Lua module detected]'
     git clone "${taranrocks_repo}"
-    yum install lua
     ./taranrocks/src/bin/luarocks build --build-rpm `ls *.rockspec | head -n 1`
 }
 

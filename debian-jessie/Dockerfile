@@ -13,7 +13,10 @@ RUN apt-get update && apt-get install -y \
     fakeroot \
     debhelper \
     cdbs \
-    equivs
+    equivs \
+    lua5.1 \
+    rpm \
+    alien
 
 RUN pip install debuilder
 
