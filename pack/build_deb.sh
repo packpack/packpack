@@ -13,6 +13,16 @@ luarocks_deb(){
     ./taranrocks/src/bin/luarocks build --build-deb `ls *.rockspec | head -n 1`
 }
 
+tarantool_install(){
+    release=`lsb_release -c -s`
+    os_id=`lsb_release -i -s | sed 's/.*/\L&/'`
+    echo "deb http://tarantool.org/dist/master/$os_id/ $release main" >> tarantool.list
+    echo "deb-src http://tarantool.org/dist/master/$os_id/ $release main" >> tarantool.list
+    sudo cp tarantool.list /etc/apt/sources.list.d/
+    sudo apt-get update
+    sudo apt-get install -y tarantool tarantool-dev --force-yes
+}
+
 # Install build deps
 git clone -b $3 $5
 if [ -d $4/debian ] ; then
@@ -30,6 +40,9 @@ if [ -d $4/debian ] ; then
     sudo mv -f distros/$2_amd64/builddir/*.xz result/
 elif [ `ls -1 $4/ | grep .rockspec | wc -l` != "0" ] ; then
     cd $4
+    if [ `grep TARANTOOL *.rockspec | wc -l` != "0" ] ; then
+        tarantool_install
+    fi
     luarocks_deb
     luarocks_export
     cd ../

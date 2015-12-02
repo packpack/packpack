@@ -26,6 +26,16 @@ common_export(){
     sudo mv -f /home/rpm/rpmbuild/RPMS/noarch/*.rpm result/
 }
 
+tarantool_install(){
+    echo "[tarantool]" > tarantool.repo
+    echo "name=Fedora-\$releasever - Tarantool" >> tarantool.repo
+    echo "baseurl=http://tarantool.org/dist/master/fedora/\$releasever/\$basearch/" >> tarantool.repo
+    echo "enabled=1" >> tarantool.repo
+    echo "gpgcheck=0" >> tarantool.repo
+    sudo cp tarantool.repo /etc/yum.repos.d/
+    sudo yum install -y tarantool tarantool-dev
+}
+
 common_rpm(){
     # create tarball
     tar cvf `cat rpm/${project}.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
@@ -47,6 +57,9 @@ if [ -d rpm ] ; then
     cd ../
     common_export
 elif [ `ls -1 | grep *.rockspec | wc -l` != "0" ] ; then
+    if [ `grep TARANTOOL *.rockspec | wc -l` != "0" ] ; then
+        tarantool_install
+    fi
     luarocks_rpm
     luarocks_export
     cd ../
