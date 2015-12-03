@@ -25,6 +25,10 @@ tarantool_install(){
     sudo apt-get install -y tarantool tarantool-dev --force-yes
 }
 
+pg_install(){
+    sudo apt-get install -y libpq-dev
+}
+
 # Install build deps
 git clone -b $3 $5
 if [ -d $4/debian ] ; then
@@ -44,6 +48,9 @@ elif [ `ls -1 $4/ | grep .rockspec | wc -l` != "0" ] ; then
     cd $4
     if [ `grep TARANTOOL *.rockspec | wc -l` != "0" ] ; then
         tarantool_install
+    fi
+    if [ `grep POSTGRESQL *.rockspec | wc -l` != "0" ] ; then
+        pg_install
     fi
     luarocks_deb
     luarocks_export

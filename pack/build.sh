@@ -43,6 +43,12 @@ tarantool_install(){
     sudo yum install -y tarantool tarantool-dev
 }
 
+pg_install(){
+    sudo yum install -y postgresql-devel
+    # replace search path for centos/fedora include dirs
+    sed -i -e s/postgresql.libpq-fe.h/libpq-fe.h/g *.rockspec
+}
+
 common_rpm(){
     # create tarball
     tar cvf `cat rpm/${project}.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
@@ -66,6 +72,9 @@ if [ -d rpm ] ; then
 elif [ `ls -1 | grep *.rockspec | wc -l` != "0" ] ; then
     if [ `grep TARANTOOL *.rockspec | wc -l` != "0" ] ; then
         tarantool_install
+    fi
+    if [ `grep POSTGRESQL *.rockspec | wc -l` != "0" ] ; then
+        pg_install
     fi
     luarocks_rpm
     luarocks_export
