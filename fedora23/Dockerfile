@@ -15,5 +15,6 @@ WORKDIR /home/rpm
 
 RUN mkdir /home/rpm/result
 RUN chown -R rpm: /home/rpm
+RUN echo fedora > /etc/yum/vars/osname
 
 USER rpm

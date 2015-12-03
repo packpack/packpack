@@ -14,5 +14,6 @@ WORKDIR /home/rpm
 
 RUN mkdir /home/rpm/result
 RUN chown -R rpm: /home/rpm
+RUN echo centos > /etc/yum/vars/osname
 
 USER rpm

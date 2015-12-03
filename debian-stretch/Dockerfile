@@ -24,6 +24,7 @@ RUN useradd -s /bin/bash -G adm,sudo -m deb
 WORKDIR /home/deb
 
 RUN mkdir /home/deb/result
+RUN echo stretch > /home/deb/relname
 RUN chown -R deb: /home/deb
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 

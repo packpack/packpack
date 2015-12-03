@@ -14,10 +14,12 @@ luarocks_deb(){
 }
 
 tarantool_install(){
-    release=`lsb_release -c -s`
+    # not working for debian stretch
+    # release=`lsb_release -c -s`
     os_id=`lsb_release -i -s | sed 's/.*/\L&/'`
-    echo "deb http://tarantool.org/dist/master/$os_id/ $release main" >> tarantool.list
-    echo "deb-src http://tarantool.org/dist/master/$os_id/ $release main" >> tarantool.list
+    rel_name=`sudo cat /home/deb/relname`
+    echo "deb http://tarantool.org/dist/master/$os_id/ $rel_name main" >> tarantool.list
+    echo "deb-src http://tarantool.org/dist/master/$os_id/ $rel_name main" >> tarantool.list
     sudo cp tarantool.list /etc/apt/sources.list.d/
     sudo apt-get update
     sudo apt-get install -y tarantool tarantool-dev --force-yes
