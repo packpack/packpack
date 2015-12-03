@@ -29,6 +29,10 @@ pg_install(){
     sudo apt-get install -y libpq-dev
 }
 
+mysql_install(){
+    sudo apt-get install -y libmysqlclient-dev
+}
+
 # Install build deps
 git clone -b $3 $5
 if [ -d $4/debian ] ; then
@@ -51,6 +55,9 @@ elif [ `ls -1 $4/ | grep .rockspec | wc -l` != "0" ] ; then
     fi
     if [ `grep POSTGRESQL *.rockspec | wc -l` != "0" ] ; then
         pg_install
+    fi
+    if [ `grep MYSQL *.rockspec | wc -l` != "0" ] ; then
+        mysql_install
     fi
     luarocks_deb
     luarocks_export

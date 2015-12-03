@@ -49,6 +49,11 @@ pg_install(){
     sed -i -e s/postgresql.libpq-fe.h/libpq-fe.h/g *.rockspec
 }
 
+mysql_install(){
+    sudo yum install -y mysql-devel
+    sudo ln -s /usr/lib64/mysql/libmysqlclient_r.so /usr/lib/libmysqlclient_r.so
+}
+
 common_rpm(){
     # create tarball
     tar cvf `cat rpm/${project}.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
@@ -64,7 +69,6 @@ common_rpm(){
 git clone -b $branch $git_url
 cd $project
 git submodule update --init --recursive
-
 if [ -d rpm ] ; then
     common_rpm
     cd ../
@@ -75,6 +79,9 @@ elif [ `ls -1 | grep *.rockspec | wc -l` != "0" ] ; then
     fi
     if [ `grep POSTGRESQL *.rockspec | wc -l` != "0" ] ; then
         pg_install
+    fi
+    if [ `grep MYSQL *.rockspec | wc -l` != "0" ] ; then
+        mysql_install
     fi
     luarocks_rpm
     luarocks_export
