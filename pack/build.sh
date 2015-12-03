@@ -36,7 +36,7 @@ tarantool_install(){
 
     echo "[tarantool]" > tarantool.repo
     echo "name=Tarantool repo" >> tarantool.repo
-    echo "baseurl=http://tarantool.org/dist/master/\$osname/$os_path/\$basearch/" >> tarantool.repo
+    echo "baseurl=http://tarantool.org/dist/master/$os_name/$os_path/\$basearch/" >> tarantool.repo
     echo "enabled=1" >> tarantool.repo
     echo "gpgcheck=0" >> tarantool.repo
     sudo cp tarantool.repo /etc/yum.repos.d/
