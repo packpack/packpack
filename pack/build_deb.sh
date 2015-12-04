@@ -1,7 +1,7 @@
 git config --global user.email "builder@tarantool.org"
 git config --global user.name "Builder"
 
-taranrocks_repo="https://github.com/bigbes/taranrocks.git"
+taranrocks_repo="https://github.com/tarantool/luarocks.git"
 
 luarocks_export(){
     sudo cp *.deb ../result
@@ -10,7 +10,7 @@ luarocks_export(){
 luarocks_deb(){
     echo '[Lua module detected]'
     git clone "${taranrocks_repo}"
-    ./taranrocks/src/bin/luarocks build --build-deb `ls *.rockspec | head -n 1`
+    ./luarocks/src/bin/luarocks build --build-deb `ls *.rockspec | head -n 1`
 }
 
 tarantool_install(){

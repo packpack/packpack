@@ -4,7 +4,7 @@ branch=$1
 git_url=$2
 project=$3
 
-taranrocks_repo="https://github.com/bigbes/taranrocks.git"
+taranrocks_repo="https://github.com/tarantool/luarocks.git"
 
 luarocks_export(){
     sudo cp *.rpm ../result
@@ -13,7 +13,7 @@ luarocks_export(){
 luarocks_rpm(){
     echo '[Lua module detected]'
     git clone "${taranrocks_repo}"
-    ./taranrocks/src/bin/luarocks build --build-rpm `ls *.rockspec | head -n 1`
+    ./luarocks/src/bin/luarocks build --build-rpm `ls *.rockspec | head -n 1`
 }
 
 common_export(){
