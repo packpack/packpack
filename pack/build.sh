@@ -50,7 +50,7 @@ pg_install(){
 }
 
 mysql_install(){
-    sudo yum install -y mysql-devel --skip-broken
+    sudo yum install -y mysql-devel
     sudo ln -s /usr/lib64/mysql/libmysqlclient_r.so /usr/lib/libmysqlclient_r.so
 }
 
