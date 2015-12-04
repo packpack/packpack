@@ -22,5 +22,8 @@ if [ -n "$PACK" ] && [ "$PACK" != "none" ]; then
         $GIT_REPO
 else
     echo 'Preparing tests'
-    echo 'Generic tests not implemented..'
+    if [ -f test.sh ]; then
+        echo 'Found test script'
+        bash test.sh
+    fi
 fi
