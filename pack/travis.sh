@@ -3,6 +3,8 @@
 SCRIPT=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT)
 
+git submodule update --init --recursive
+gem install package_cloud
 if [ -n "$PACK" ] && [ "$PACK" != "none" ]; then
     [ -z $OS ] && echo "Missing OS" && exit 1
     [ -z $DIST ] && echo "Missing DIST" && exit 1
