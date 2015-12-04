@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Travis-CI wrapper for parallel builds
 
 enabled_branches="master 1.6 1.7"
