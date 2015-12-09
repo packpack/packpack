@@ -5,6 +5,8 @@
 enabled_branches="master 1.6 1.7"
 if [[ $enabled_branches =~ $4 ]] ; then
     echo 'Build started'
+elif [ -n "$FORCE_BUILD" ] && [ "$FORCE_BUILD" == "true" ]; then
+    echo 'Force build enabled for this branch'
 else
     echo 'Build skipped(this branch is not for packaging)'
     exit 0

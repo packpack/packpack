@@ -56,7 +56,8 @@ mysql_install(){
 
 common_rpm(){
     # create tarball
-    tar cvf `cat rpm/${project}.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
+    git describe --long > VERSION
+    tar cvf `git describe --long | sed "s/-[0-9]*-.*//"`.tar.gz . --exclude=.git
 
     # install build deps
     sudo yum-builddep -y rpm/$project.spec
