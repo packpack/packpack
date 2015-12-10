@@ -56,6 +56,7 @@ mysql_install(){
 
 common_rpm(){
     # create tarball
+    echo `git describe --long`
     git describe --long > VERSION
     tar cvf `git describe --long | sed "s/-[0-9]*-.*//"`.tar.gz . --exclude=.git
 
