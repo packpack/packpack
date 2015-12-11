@@ -12,9 +12,11 @@ else
     exit 0
 fi
 
+repo_path=`echo $4 | sed -e "s/\./_/"`
+
 if [ $# -eq 7 ] ; then
     make os=$2 dist=$3 branch=$4 product=$6 uri=$7 build-$1
-    make os=$2 dist=$3 repo=$5 export-$1
+    make os=$2 dist=$3 repo=$repo_path export-$1
 else
     echo 'Build skipped'
     echo 'Usage:'
