@@ -65,6 +65,7 @@ common_rpm(){
 
     cp *.tar.gz ../rpmbuild/SOURCES/
     cp -f rpm/*.ini ../rpmbuild/SOURCES/
+    cp VERSION ../rpmbuild/SOURCES
     rpmbuild -ba rpm/$project.spec
 }
 
