@@ -63,6 +63,7 @@ If `PACK` is equal `none` - script can run `test.sh` from project root(if file e
 Exclusion:
 It's possible to exclude some builds from packaging:
 https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
+
 Example: https://github.com/tarantool/tarantool/blob/1.6/.travis.yml
 
 
