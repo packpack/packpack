@@ -11,6 +11,7 @@ RUN yum install -y https://rdo.fedorapeople.org/rdo-release.rpm
 RUN yum install -y wget
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 RUN wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
+RUN yum -y install devtoolset-2-toolchain devtoolset-2-binutils-devel
 
 RUN useradd -s /bin/bash -G adm,wheel -m rpm
 WORKDIR /home/rpm

@@ -1,5 +1,13 @@
 mkdir -p rpmbuild/SOURCES
 
+if [ -f /usr/bin/scl ] ; then
+    # centos 6 devtoolset support
+    echo 'SCL MODE'
+    export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
+    export CPP=/opt/rh/devtoolset-2/root/usr/bin/cpp
+    export CXX=/opt/rh/devtoolset-2/root/usr/bin/c++
+fi
+
 branch=$1
 git_url=$2
 project=$3
