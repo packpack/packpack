@@ -35,19 +35,7 @@ common_export(){
 }
 
 tarantool_install(){
-    os_name=`sudo cat /etc/yum/vars/osname`
-    os_path="\$releasever"
-
-    if [ $os_name == "centos" ] ; then
-        os_path=$os_path"/os"
-    fi
-
-    echo "[tarantool]" > tarantool.repo
-    echo "name=Tarantool repo" >> tarantool.repo
-    echo "baseurl=http://tarantool.org/dist/master/$os_name/$os_path/\$basearch/" >> tarantool.repo
-    echo "enabled=1" >> tarantool.repo
-    echo "gpgcheck=0" >> tarantool.repo
-    sudo cp tarantool.repo /etc/yum.repos.d/
+    curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.rpm.sh | sudo bash
     sudo yum install -y tarantool tarantool-dev
 }
 
@@ -60,6 +48,16 @@ pg_install(){
 mysql_install(){
     sudo yum install -y mysql-devel
     sudo ln -s /usr/lib64/mysql/libmysqlclient_r.so /usr/lib/libmysqlclient_r.so
+}
+
+libsmall_install(){
+    curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.rpm.sh | sudo bash
+    sudo yum install -y small small-devel
+}
+
+libmsgpuck_install(){
+    curl -s https://packagecloud.io/install/repositories/tarantool/master/script.rpm.sh | sudo bash
+    sudo yum install -y msgpuck-devel
 }
 
 common_rpm(){
@@ -93,6 +91,12 @@ elif [ `ls -1 | grep *.rockspec | wc -l` != "0" ] ; then
     fi
     if [ `grep MYSQL *.rockspec | wc -l` != "0" ] ; then
         mysql_install
+    fi
+    if [ `grep SMALL *.rockspec | wc -l` != "0" ] ; then
+        libsmall_install
+    fi
+    if [ `grep MSGPUCK *.rockspec | wc -l` != "0" ] ; then
+        libmsgpuck_install
     fi
     luarocks_rpm
     luarocks_export

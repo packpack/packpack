@@ -28,4 +28,10 @@ RUN echo stretch > /home/deb/relname
 RUN chown -R deb: /home/deb
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+RUN echo 'DISTRIB_ID=Debian' > /home/deb/lsb-release
+RUN echo 'DISTRIB_RELEASE=9' >> /home/deb/lsb-release
+RUN echo 'DISTRIB_CODENAME=stretch' >> /home/deb/lsb-release
+RUN echo 'DISTRIB_DESCRIPTION="Debain 9"' >> /home/deb/lsb-release
+RUN cp /home/deb/lsb-release /etc/lsb-release
+
 USER deb

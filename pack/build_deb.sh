@@ -14,14 +14,7 @@ luarocks_deb(){
 }
 
 tarantool_install(){
-    # not working for debian stretch
-    # release=`lsb_release -c -s`
-    os_id=`lsb_release -i -s | sed 's/.*/\L&/'`
-    rel_name=`sudo cat /home/deb/relname`
-    echo "deb http://tarantool.org/dist/master/$os_id/ $rel_name main" >> tarantool.list
-    echo "deb-src http://tarantool.org/dist/master/$os_id/ $rel_name main" >> tarantool.list
-    sudo cp tarantool.list /etc/apt/sources.list.d/
-    sudo apt-get update
+    curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.deb.sh | sudo bash
     sudo apt-get install -y tarantool tarantool-dev --force-yes
 }
 
@@ -32,9 +25,19 @@ pg_install(){
 mysql_install(){
     sudo apt-get install -y libmysqlclient-dev
 }
+libsmall_install(){
+    curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.deb.sh | sudo bash
+    sudo apt-get install -y libsmall libsmall-dev
+}
+
+libmsgpuck_install(){
+    curl -s https://packagecloud.io/install/repositories/tarantool/master/script.deb.sh | sudo bash
+    sudo apt-get install -y libmsgpuck-dev
+}
 
 # Install build deps
 git clone -b $3 $5
+
 if [ -d $4/debian ] ; then
     cd $4
     sudo mk-build-deps -i --tool "apt-get -y"
@@ -58,6 +61,12 @@ elif [ `ls -1 $4/ | grep .rockspec | wc -l` != "0" ] ; then
     fi
     if [ `grep MYSQL *.rockspec | wc -l` != "0" ] ; then
         mysql_install
+    fi
+    if [ `grep SMALL *.rockspec | wc -l` != "0" ] ; then
+        libsmall_install
+    fi
+    if [ `grep MSGPUCK *.rockspec | wc -l` != "0" ] ; then
+        libmsgpuck_install
     fi
     luarocks_deb
     luarocks_export
