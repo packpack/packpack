@@ -3,6 +3,8 @@ mkdir -p rpmbuild/SOURCES
 branch=$1
 git_url=$2
 project=$3
+build_version=''
+prod_version=''
 
 taranrocks_repo="https://github.com/tarantool/luarocks.git"
 
@@ -52,12 +54,18 @@ libmsgpuck_install(){
     sudo yum install -y msgpuck-devel
 }
 
+bump_rpm(){
+    build_version=`git describe --long | sed "s/[0-9]*\.[0-9]*\.[0-9]*-//" | sed "s/-[a-z 0-9]*//"`
+    prod_version=`git describe --long | sed "s/-[0-9]*-.*//"`
+    sed -i -e "s/Version:\([ ]*\).*/Version: $prod_version.$build_version/g" rpm/$project.spec
+}
+
 common_rpm(){
     # create tarball
     echo `git describe --long`
     git describe --long > VERSION
-    transform='s,^\.,tarantool-'`git describe --long`'-src,S'
-    tar cvf `git describe --long | sed "s/-[0-9]*-.*//"`.tar.gz . --exclude=.git --transform=$transform
+    transform='s,^\.,tarantool-'$prod_version.$build_version',S'
+    tar cvf $project-$prod_version.$build_version.tar.gz . --exclude=.git --transform=$transform
 
     # install build deps
     sudo yum-builddep -y rpm/$project.spec
@@ -72,6 +80,7 @@ git clone -b $branch $git_url
 cd $project
 git submodule update --init --recursive
 if [ -d rpm ] ; then
+    bump_rpm
     common_rpm
     cd ../
     common_export
