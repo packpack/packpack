@@ -64,7 +64,7 @@ common_rpm(){
     # create tarball
     echo `git describe --long`
     git describe --long > VERSION
-    transform='s,^\.,tarantool-'$prod_version.$build_version',S'
+    transform='s,^\.,'$project'-'$prod_version.$build_version',S'
     tar cvf $project-$prod_version.$build_version.tar.gz . --exclude=.git --transform=$transform
 
     # install build deps
