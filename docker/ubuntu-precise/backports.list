@@ -1,0 +1,2 @@
+deb http://archive.ubuntu.com/ubuntu precise-backports main universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu/ precise-backports main universe multiverse

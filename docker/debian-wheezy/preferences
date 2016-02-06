@@ -1,0 +1,3 @@
+Package: *
+Pin: release a=wheezy-backports
+Pin-Priority: 100

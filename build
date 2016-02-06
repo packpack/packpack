@@ -1,0 +1,197 @@
+#!/usr/bin/make -f
+
+DOCKER_REPO:=rtsisyk/build
+SCRIPTDIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+BUILDROOT:=$(abspath $(SCRIPTDIR)/root)
+# http://stackoverflow.com/questions/2564634/convert-absolute-path-into-relative-path-given-a-current-directory-using-bash
+RELBUILDROOT=$(shell perl -MFile::Spec -e 'print File::Spec->abs2rel("'$(BUILDROOT)'","'$(CURDIR)'")')
+
+# Sanity checks
+ifeq ("$(SCRIPTDIR)","$(CURDIR)")
+$(error Please run ./build/build inside of the project source directory)
+endif
+ifeq ("$(wildcard VERSION)","")
+$(error Missing VERSION file, please run `git describe --long --always > VERSION`)
+endif
+
+#
+# List of supported OS
+#
+
+FEDORA:=fedora-rawhide fedora23 fedora22
+CENTOS:=centos7 centos6
+DEBIAN:=debian-sid debian-stretch debian-jessie debian-wheezy
+UBUNTU:=ubuntu-xenial ubuntu-wily ubuntu-trusty ubuntu-precise
+
+DEBS:=$(DEBIAN) $(UBUNTU)
+RPMS:=$(FEDORA) $(CENTOS)
+
+##
+
+PRODUCT=$(notdir $(basename ${CURDIR}))
+VERSION=$(shell cat VERSION | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1/p')
+RELEASE=$(shell cat VERSION | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\2/p')
+
+# Debian overrides
+DEB_VERSION=$(VERSION)
+DEB_RELEASE=$(RELEASE)
+
+# RPM overrides
+RPM_VERSION=$(VERSION)
+RPM_RELEASE=$(RELEASE)
+RPM_SPEC=rpm/$(PRODUCT).spec
+
+NAME=$(PRODUCT)-$(VERSION)
+TARBALL=$(NAME).tar.gz
+TARBALL_EXTRA_ARGS:=
+TARBALL_EXTRA_FILES:=
+
+# get os-dist from target name
+define osdist
+$(shell echo $1| sed -n 's/.*\/\(rpm\|deb\)-\([a-z0-9\-]*\).*/\2/p')
+endef
+
+define builderu
+$(shell echo $1| sed -n 's/.*\/\([a-z]*\)-\([a-z0-9\-]*\).*/\1/p' | tr a-z A-Z)
+endef
+
+define builder
+$(shell echo $1| sed -n 's/.*\/\([a-z]*\)-\([a-z0-9\-]*\).*/\1/p')
+endef
+
+# Override rules
+include $(SCRIPTDIR)/product.d/$(PRODUCT).mk
+-include $(CURDIR)/.build.mk
+
+$(info Tarantool/Build for $(PRODUCT) $(VERSION))
+
+##
+## Common rules
+##
+
+# Build all RPMS and all DEBS
+all: $(DEBS) $(RPMS)
+
+# Create tarball in buildroot
+# --exclude-vcs-ignores is broken
+$(BUILDROOT)/$(TARBALL):
+	@mkdir -p $(dir $@)
+	@echo "-------------------------------------------------------------------"
+	@echo "Creating source tarball"
+	@echo "-------------------------------------------------------------------"
+	tar \
+		--exclude-vcs \
+		--exclude-backups \
+		--exclude='./$(RELBUILDROOT)' \
+		$(TARBALL_EXTRA_ARGS) \
+		--exclude=FreeBSD --exclude=debian --exclude=rpm \
+		--transform='s,^\.,$(NAME),S' \
+		-czf $@ . ./VERSION $(TARBALL_EXTRA_FILES)
+
+# Copy tarball to buildroot/$OS-$DIST chroot
+$(BUILDROOT)/%/$(TARBALL): $(BUILDROOT)/$(TARBALL)
+	cp -pf $< $@
+
+# Generate a temporary Docker file to run container with $USER
+$(BUILDROOT)/%/Dockerfile:
+	@mkdir -p $(dir $@)
+	@echo "-------------------------------------------------------------------"
+	@echo "Generating Dockerfile"
+	@echo "-------------------------------------------------------------------"
+	echo "FROM $(DOCKER_REPO):$(call osdist,$@)" > $@.tmp
+	echo "RUN useradd -s $${SHELL} -G adm -u $$(id -u) -d $${HOME} -m $${USER};\\" >> $@.tmp
+	echo "    usermod -a -G wheel $${USER} || :;\\" >> $@.tmp
+	echo "    usermod -a -G sudo $${USER} || :;\\" >> $@.tmp
+	echo "    usermod -a -G mock $${USER} || :" >> $@.tmp
+	echo "USER ${USER}" >> $@.tmp
+	mv $@.tmp $@
+	@echo
+
+# Build Docker image
+$(BUILDROOT)/%/.docker-image: $(BUILDROOT)/%/Dockerfile
+	@echo "-------------------------------------------------------------------"
+	@echo "Building Docker image"
+	@echo "-------------------------------------------------------------------"
+	docker build --rm=true --quiet=true -t $(call osdist,$@)-for-$(USER) \
+		$(dir $@)
+	touch $@
+
+# Copy builder.mk to buildroot/$OS-$DIST
+$(BUILDROOT)/%/Makefile:
+	@mkdir -p $(dir $@)
+	cp -pf $(SCRIPTDIR)/pack/$(call builder,$@).mk $@
+
+# Build packages using Docker in buildroot/$OS-$DIST/
+$(BUILDROOT)/%/.build: $(BUILDROOT)/%/$(TARBALL) \
+                       $(BUILDROOT)/%/.docker-image \
+                       $(BUILDROOT)/%/Makefile
+	@echo "-------------------------------------------------------------------"
+	@echo "Building packages"
+	@echo "-------------------------------------------------------------------"
+	rm -rf $@
+	cd $(dir $@) && \
+	ls -l && \
+	docker run \
+		--volume $$(pwd):$$(pwd) \
+		--workdir $$(pwd) \
+		--rm=true $(call osdist,$@)-for-${USER}  \
+		make PRODUCT=$(PRODUCT) NAME=$(NAME) \
+	         TARBALL=$(TARBALL) \
+	         VERSION=$($(call builderu,$@)_VERSION) \
+	         RELEASE=$($(call builderu,$@)_RELEASE)
+	@echo "Successfully build $(PRODUCT) for $@"
+	ls -1sh $(dir $@)
+	test -f $(dir $@)/results/.done
+
+##
+## RPM
+##
+
+# Copy RPM spec to buildroot/$OS-$DIST
+$(BUILDROOT)/rpm-%/$(PRODUCT).spec: $(RPM_SPEC)
+	@mkdir -p $(dir $@)
+	cp -f $< $@
+
+# A rule to build RPM packages
+$(BUILDROOT)/rpm-%/results/.done: $(BUILDROOT)/rpm-%/$(PRODUCT).spec \
+                                  $(BUILDROOT)/rpm-%/.build
+	@true
+
+##
+## DEB
+##
+
+# Copy debian/ to buildroot/$OS-$DIST
+$(BUILDROOT)/deb-%/debian/changelog: debian/changelog
+	@mkdir -p $(abspath $(dir $@)/../)
+	cp -fpR debian/ $(abspath $(dir $@)/../)
+
+# A rule to build DEB packages
+$(BUILDROOT)/deb-%/results/.done: $(BUILDROOT)/deb-%/debian/changelog \
+                                  $(BUILDROOT)/deb-%/.build
+	@true
+
+##
+## Targets
+##
+
+tarball: $(BUILDROOT)/$(TARBALL)
+
+# Don't remove all rules, otherwise pattern matching will stop work
+fedora%: $(BUILDROOT)/rpm-fedora%/results/.done
+	@true
+centos%: $(BUILDROOT)/rpm-centos%/results/.done
+	@true
+debian-%: $(BUILDROOT)/deb-debian-%/results/.done
+	@true
+ubuntu-%: $(BUILDROOT)/deb-ubuntu-%/results/.done
+	@true
+
+download: $(patsubst %,$(BUILDROOT)/deb-%/.docker-image,$(DEBS)) \
+          $(patsubst %,$(BUILDROOT)/rpm-%/.docker-image,$(RPMS))
+
+clean:
+	rm -rf $(BUILDROOT)
+
+.SECONDARY: # no target is removed because it is considered intermediate
+.PHONY: clean
