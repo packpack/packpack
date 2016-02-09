@@ -23,4 +23,7 @@ RUN yum -y install cmake readline-devel libyaml-devel binutils-devel \
                    zlib-devel doxygen
 RUN yum -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx
+# Install gevent-1.0.1
+ADD python-gevent-1.0.1-1.x86_64.rpm /tmp/
+RUN yum -y install /tmp/python-gevent-1.0.1-1.x86_64.rpm
 RUN yum -y install luajit luajit-devel lua lua-devel
