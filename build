@@ -214,6 +214,9 @@ debian-%: $(BUILDROOT)/deb-debian-%/results/.done
 	@true
 ubuntu-%: $(BUILDROOT)/deb-ubuntu-%/results/.done
 	@true
+# replace el with centos
+el%: centos%
+	@true
 
 rock-fedora%: $(BUILDROOT)/rockrpm-fedora%/results/.done
 	@true
