@@ -130,9 +130,9 @@ if [ "${PACK}" == "rpm" ]; then
             DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
         ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
             DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
-    #elif [ -f "${ROCKSPEC}" ]; then
-    #    echo "Found RockSpec: ${ROCKSPEC}.spec"
-    #    ${SCRIPTDIR}/luarocks_rpm.sh ${ROCKSPEC}
+    elif [ -f "${ROCKSPEC}" ]; then
+        ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
+            DOCKER_REPO=${DOCKER_REPO} rock-${OSDIST}
     else
         echo "Can't find RPM spec"
         exit 1
@@ -142,9 +142,9 @@ elif [ "${PACK}" == "deb" ]; then
         echo "Found debian/"
         ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
             DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
-    #elif [ -f "${ROCKSPEC}" ]; then
-    #    echo "Found RockSpec: ${ROCKSPEC}.spec"
-    #    ${SCRIPTDIR}/luarocks_deb.sh ${ROCKSPEC}
+    elif [ -f "${ROCKSPEC}" ]; then
+        ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
+            DOCKER_REPO=${DOCKER_REPO} rock-${OSDIST}
     else
         echo "Can't find debian/"
         exit 1

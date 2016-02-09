@@ -41,6 +41,13 @@ RPM_VERSION=$(VERSION)
 RPM_RELEASE=$(RELEASE)
 RPM_SPEC=rpm/$(PRODUCT).spec
 
+# ROCK variables
+ROCKRPM_VERSION=$(VERSION)
+ROCKRPM_RELEASE=$(RELEASE)
+ROCKDEB_VERSION=$(VERSION)
+ROCKDEB_RELEASE=$(RELEASE)
+ROCK_SPEC=$(wildcard *.rockspec)
+
 NAME=$(PRODUCT)-$(VERSION)
 TARBALL=$(NAME).tar.gz
 TARBALL_EXTRA_ARGS:=
@@ -48,7 +55,7 @@ TARBALL_EXTRA_FILES:=
 
 # get os-dist from target name
 define osdist
-$(shell echo $1| sed -n 's/.*\/\(rpm\|deb\)-\([a-z0-9\-]*\).*/\2/p')
+$(shell echo $1| sed -n 's/.*\/\([a-z]*\)-\([a-z0-9\-]*\).*/\2/p')
 endef
 
 define builderu
@@ -60,7 +67,7 @@ $(shell echo $1| sed -n 's/.*\/\([a-z]*\)-\([a-z0-9\-]*\).*/\1/p')
 endef
 
 # Override rules
-include $(SCRIPTDIR)/product.d/$(PRODUCT).mk
+-include $(SCRIPTDIR)/product.d/$(PRODUCT).mk
 -include $(CURDIR)/.build.mk
 
 $(info Tarantool/Build for $(PRODUCT) $(VERSION))
@@ -140,7 +147,7 @@ $(BUILDROOT)/%/.build: $(BUILDROOT)/%/$(TARBALL) \
 	         VERSION=$($(call builderu,$@)_VERSION) \
 	         RELEASE=$($(call builderu,$@)_RELEASE)
 	@echo "Successfully build $(PRODUCT) for $@"
-	ls -1sh $(dir $@)
+	ls -1sh $(dir $@)/results/
 	test -f $(dir $@)/results/.done
 
 ##
@@ -172,6 +179,27 @@ $(BUILDROOT)/deb-%/results/.done: $(BUILDROOT)/deb-%/debian/changelog \
 	@true
 
 ##
+## LuaRocks
+##
+
+$(BUILDROOT)/rock%/$(PRODUCT)-scm-1.rockspec: $(ROCK_SPEC)
+	@mkdir -p $(dir $@)
+	cp -pf $< $@
+
+$(BUILDROOT)/rockrpm-%/deps.sh: $(SCRIPTDIR)/pack/luarocks_deps_rpm.sh
+	@mkdir -p $(dir $@)
+	cp -pf $< $@
+
+$(BUILDROOT)/rockdeb-%/deps.sh: $(SCRIPTDIR)/pack/luarocks_deps_deb.sh
+	@mkdir -p $(dir $@)
+	cp -pf $< $@
+
+$(BUILDROOT)/rock%/results/.done: $(BUILDROOT)/rock%/$(PRODUCT)-scm-1.rockspec \
+                                  $(BUILDROOT)/rock%/deps.sh \
+                                  $(BUILDROOT)/rock%/.build
+	@true
+
+##
 ## Targets
 ##
 
@@ -185,6 +213,15 @@ centos%: $(BUILDROOT)/rpm-centos%/results/.done
 debian-%: $(BUILDROOT)/deb-debian-%/results/.done
 	@true
 ubuntu-%: $(BUILDROOT)/deb-ubuntu-%/results/.done
+	@true
+
+rock-fedora%: $(BUILDROOT)/rockrpm-fedora%/results/.done
+	@true
+rock-centos%: $(BUILDROOT)/rockrpm-centos%/results/.done
+	@true
+rock-debian-%: $(BUILDROOT)/rockdeb-debian-%/results/.done
+	@true
+rock-ubuntu-%: $(BUILDROOT)/rockdeb-ubuntu-%/results/.done
 	@true
 
 download: $(patsubst %,$(BUILDROOT)/deb-%/.docker-image,$(DEBS)) \

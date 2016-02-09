@@ -2,11 +2,6 @@
 
 ROCKSPEC=$1
 
-git config --global user.email "builder@tarantool.org"
-git config --global user.name "Builder"
-
-taranrocks_repo="https://github.com/tarantool/luarocks.git"
-
 tarantool_install(){
     curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.deb.sh | sudo bash
     sudo apt-get install -y tarantool tarantool-dev --force-yes
@@ -44,7 +39,3 @@ fi
 if [ `grep MSGPUCK ${ROCKSPEC} | wc -l` != "0" ] ; then
     libmsgpuck_install
 fi
-
-git clone "${taranrocks_repo}"
-./luarocks/src/bin/luarocks build --build-deb $ROCKSPEC
-mkdir -p packages/

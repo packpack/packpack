@@ -2,8 +2,6 @@
 
 ROCKSPEC=$1
 
-taranrocks_repo="https://github.com/tarantool/luarocks.git"
-
 tarantool_install(){
     curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.rpm.sh | sudo bash
     sudo yum install -y tarantool tarantool-dev
@@ -45,8 +43,3 @@ fi
 if [ `grep MSGPUCK ${ROCKSPEC} | wc -l` != "0" ] ; then
     libmsgpuck_install
 fi
-
-git clone "${taranrocks_repo}"
-./luarocks/src/bin/luarocks build --build-rpm $ROCKSPEC
-mkdir -p packages/
-cp -f *.rpm packages/
