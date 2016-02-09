@@ -41,6 +41,9 @@ fi
 echo 'Packaging mode'
 
 [ -n "${OS}" ] || usage "Missing OS"
+if [ "${OS}" == "el" ]; then
+    OS=centos
+fi
 [ -n "${DIST}" ] || usage "Missing DIST"
 [ -x ${SCRIPT_DIR}/build ] || usage "Missing ./build"
 
