@@ -40,7 +40,7 @@ $(DEB_NAME)-$(RELEASE).dsc: $(NAME)/debian/changelog $(DEB_TARBALL)
 	@echo "Updating changelog"
 	@echo "-------------------------------------------------------------------"
 	cd $(NAME) && NAME="Tarantool Buildbot" DEBEMAIL="build@tarantool.org" \
-		dch -v $(VERSION)-$(RELEASE) "Automatic build"
+		dch -b -v $(VERSION)-$(RELEASE) "Automatic build"
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"

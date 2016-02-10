@@ -43,7 +43,7 @@ $(RPMSPEC): $(RPMSPECIN)
 	sed -e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
 		 -e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
 		 -e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
-		 -e 's/%setup -q -n .*/%setup -q -n $(NAME)/' \
+		 -e 's/%setup .*/%setup -q -n $(NAME)/' \
 		 -i $@.tmp
 	@grep -E "Version:|Release:|Source0|%setup" $@.tmp
 	@mv -f $@.tmp $@
