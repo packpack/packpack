@@ -66,6 +66,10 @@ if [ -n "${TRAVIS_REPO_SLUG}" ]; then
     if [ -z "${PACKAGECLOUD_REPO}" ]; then
         TRAVIS_REPO_USER=$(echo $TRAVIS_REPO_SLUG | cut -d '/' -f 1)
         PACKAGECLOUD_REPO=${TRAVIS_REPO_USER}/$(echo ${BRANCH} | sed -e "s/\./_/")
+        if [ "${TRAVIS_REPO_USER}" == "tarantool" ] && [ "${BRANCH}" == "master" ]; then
+            # Upload all master branches from tarantool/X repos to tarantool/1_6
+            PACKAGECLOUD_REPO="tarantool/1_6"
+        fi
     fi
     update_submodules
 else
@@ -179,12 +183,16 @@ if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
     if [ "${PACK}" == "rpm" ]; then
         package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
             ${RESULTS}/*[!src].rpm --skip-errors
-        package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/SRPMS/ \
-            ${RESULTS}/*.src.rpm --skip-errors
+        if [ -f "${RESULTS}/*.src.rpm" ]; then
+            package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/SRPMS/ \
+                ${RESULTS}/*.src.rpm --skip-errors
+        fi
     elif [ "${PACK}" == "deb" ]; then
         package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
             ${RESULTS}/*.deb --skip-errors
-        package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
-            ${RESULTS}/*.dsc --skip-errors
+        if [ -f "${RESULTS}/*.dsc" ]; then
+            package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
+                ${RESULTS}/*.dsc --skip-errors
+        fi
     fi
 fi
