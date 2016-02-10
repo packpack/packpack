@@ -130,6 +130,8 @@ ROCKSPEC=$(ls -1 *.rockspec rockspec/*-scm*.rockspec 2> /dev/null)
 echo "Make version is:"
 make --version
 
+RESULTS=${SCRIPT_DIR}/root/${PACK}-${OSDIST}/results/
+
 if [ "${PACK}" == "rpm" ]; then
     if [ -f "rpm/${PRODUCT}.spec" ] ; then
         echo "Found RPM: rpm/${PRODUCT}.spec"
@@ -138,6 +140,7 @@ if [ "${PACK}" == "rpm" ]; then
         ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
             DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
     elif [ -f "${ROCKSPEC}" ]; then
+        RESULTS=${SCRIPT_DIR}/root/rockrpm-${OSDIST}/results/
         ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
             DOCKER_REPO=${DOCKER_REPO} rock-${OSDIST}
     else
@@ -150,6 +153,7 @@ elif [ "${PACK}" == "deb" ]; then
         ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
             DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
     elif [ -f "${ROCKSPEC}" ]; then
+        RESULTS=${SCRIPT_DIR}/root/rockdeb-${OSDIST}/results/
         ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
             DOCKER_REPO=${DOCKER_REPO} rock-${OSDIST}
     else
@@ -164,8 +168,6 @@ if [ $? -ne 0 ]; then
     echo "Build failed"
     exit -1
 fi
-
-RESULTS=${SCRIPT_DIR}/root/${PACK}-${OSDIST}/results/
 
 if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
     echo "Exporting packages to packagecloud.io repo ${PACKAGECLOUD_REPO}"
