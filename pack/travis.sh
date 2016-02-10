@@ -32,8 +32,11 @@ if [ "$PACK" == "none" ]; then
     echo 'Test-only mode'
     update_submodules
     if [ -f test.sh ]; then
-        echo 'Found test script'
+        echo 'Found test.sh script'
         exec bash test.sh
+    elif [ -f .build.mk ]; then
+        echo 'Found .build.mk script'
+        exec make -f .build.mk test
     fi
     exit 0
 fi
