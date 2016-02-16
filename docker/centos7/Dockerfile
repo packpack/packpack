@@ -17,3 +17,5 @@ RUN yum -y install cmake readline-devel libyaml-devel binutils-devel \
 RUN yum -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx
 RUN yum -y install luajit luajit-devel lua lua-devel
+ADD tarantool_1_6.repo /etc/yum.repos.d/
+RUN yum -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'

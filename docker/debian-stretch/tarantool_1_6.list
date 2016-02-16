@@ -1,0 +1,2 @@
+deb https://packagecloud.io/tarantool/1_6/debian/ stretch main
+deb-src https://packagecloud.io/tarantool/1_6/debian/ stretch main

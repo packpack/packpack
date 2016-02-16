@@ -20,3 +20,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install msgpack-python
 RUN apt-get update && apt-get install -y luajit \
     lua5.1 liblua5.1-dev lua5.2 liblua5.2-dev dh-lua
+RUN curl -L https://packagecloud.io/tarantool/1_6/gpgkey | sudo apt-key add -
+RUN apt-get update && apt-get install -y apt-transport-https
+ADD tarantool_1_6.list /etc/apt/sources.list.d/
+RUN apt-get update

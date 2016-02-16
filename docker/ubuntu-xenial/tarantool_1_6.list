@@ -1,0 +1,2 @@
+deb https://packagecloud.io/tarantool/1_6/ubuntu/ xenial main
+deb-src https://packagecloud.io/tarantool/1_6/ubuntu/ xenial main

@@ -1,0 +1,17 @@
+[tarantool_1_6]
+name=tarantool_1_6
+baseurl=https://packagecloud.io/tarantool/1_6/el/$releasever/$basearch
+gpgcheck=0
+enabled=1
+gpgkey=https://packagecloud.io/tarantool/1_6/gpgkey
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+
+[tarantool_1_6-source]
+name=tarantool_1_6-source
+baseurl=https://packagecloud.io/tarantool/1_6/el/$releasever/SRPMS
+gpgcheck=0
+enabled=1
+gpgkey=https://packagecloud.io/tarantool/1_6/gpgkey
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt

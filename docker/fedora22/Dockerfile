@@ -18,3 +18,5 @@ RUN dnf -y install cmake readline-devel libyaml-devel binutils-devel \
 RUN dnf -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx
 RUN dnf -y install luajit luajit-devel lua lua-devel
+ADD tarantool_1_6.repo /etc/yum.repos.d/
+RUN dnf -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'
