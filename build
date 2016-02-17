@@ -105,13 +105,14 @@ $(BUILDROOT)/%/Dockerfile:
 	@echo "-------------------------------------------------------------------"
 	@echo "Generating Dockerfile"
 	@echo "-------------------------------------------------------------------"
-	echo "FROM $(DOCKER_REPO):$(call osdist,$@)" > $@.tmp
-	echo "RUN useradd -s $${SHELL} -G adm -u $$(id -u) -d $${HOME} -m $${USER};\\" >> $@.tmp
-	echo "    usermod -a -G wheel $${USER} || :;\\" >> $@.tmp
-	echo "    usermod -a -G sudo $${USER} || :;\\" >> $@.tmp
-	echo "    usermod -a -G mock $${USER} || :" >> $@.tmp
-	echo "USER ${USER}" >> $@.tmp
-	mv $@.tmp $@
+	@echo "FROM $(DOCKER_REPO):$(call osdist,$@)" > $@.tmp
+	@echo "RUN useradd -s $${SHELL} -G adm -u $$(id -u) -d $${HOME} -m $${USER}" >> $@.tmp
+	@echo "RUN usermod -a -G wheel $${USER} || :;\\" >> $@.tmp
+	@echo "    usermod -a -G sudo $${USER} || :;\\" >> $@.tmp
+	@echo "    usermod -a -G mock $${USER} || :" >> $@.tmp
+	@echo "USER ${USER}" >> $@.tmp
+	@mv $@.tmp $@
+	cat $@
 	@echo
 
 # Build Docker image
