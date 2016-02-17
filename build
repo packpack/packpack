@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-DOCKER_REPO:=rtsisyk/build
+DOCKER_REPO:=tarantool/build
 SCRIPTDIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 BUILDROOT:=$(abspath $(SCRIPTDIR)/root)
 # http://stackoverflow.com/questions/2564634/convert-absolute-path-into-relative-path-given-a-current-directory-using-bash
