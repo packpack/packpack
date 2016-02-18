@@ -188,14 +188,14 @@ if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
     if [ "${PACK}" == "rpm" ]; then
         package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
             ${RESULTS}/*[!src].rpm --skip-errors
-        if [ -f "${RESULTS}/*.src.rpm" ]; then
+        if [ "$(echo ${RESULTS}/*.src.rpm)" != "${RESULTS}/*.src.rpm" ]; then
             package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/SRPMS/ \
                 ${RESULTS}/*.src.rpm --skip-errors
         fi
     elif [ "${PACK}" == "deb" ]; then
         package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
             ${RESULTS}/*.deb --skip-errors
-        if [ -f "${RESULTS}/*.dsc" ]; then
+        if [ "$(echo ${RESULTS}/*.dsc)" != "${RESULTS}/*.dsc" ]; then
             package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
                 ${RESULTS}/*.dsc --skip-errors
         fi
