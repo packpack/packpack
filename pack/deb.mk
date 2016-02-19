@@ -44,6 +44,7 @@ $(DEB_NAME)-$(RELEASE).dsc: $(NAME)/debian/changelog $(DEB_TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
+	sudo apt-get update > /dev/null
 	cd $(NAME) && sudo mk-build-deps -i --tool "apt-get -y" || :
 	cd $(NAME) && sudo rm -f *build-deps_*_all.deb
 	@echo
