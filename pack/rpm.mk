@@ -60,6 +60,7 @@ $(RPMSRC): $(RPMSPEC) $(RPMTARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependecies"
 	@echo "-------------------------------------------------------------------"
+	sudo yum clean all
 	sudo dnf builddep -y $< || sudo yum-builddep -y $<
 	@echo
 	@echo "-------------------------------------------------------------------"
