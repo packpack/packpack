@@ -1,9 +1,15 @@
 from posixpath import join as pathjoin
 import subprocess
 import requests
+import sys
 
 API_URL = "https://packagecloud.io/"
 API_USER = "tarantool"
+REPO = '1_6'
+API_REPO = 'tarantool_%s' % '1_6'
+
+RPM_PATH = './%s/x86_64/'
+SRPM_PATH = './%s/SRPMS/'
 
 class RepoManager(object):
     """
@@ -39,7 +45,7 @@ class RepoManager(object):
         ]
     }
 
-    def __init__(self, token, user=API_USER, url=API_URL, limit=2):
+    def __init__(self, token, user=API_USER, url=API_URL, limit=5):
         self.api_url = url
         self.auth = (token, '')
         self.api_user = user
@@ -106,6 +112,9 @@ class RepoManager(object):
                 self.prune_repo(repo['name'], kind)
 
     def aptly_update(self, repo, alias=None):
+        """
+        Generate commands to update each debian based os/dist
+        """
 	result = []
         if alias is None:
             alias = repo_name
@@ -125,6 +134,8 @@ class RepoManager(object):
         if alias is None:
             alias = repo_name
         cmds = []
+
+        # create mirrors
         for conf in self.DISRS['deb']:
             cmds.append([
                 'aptly', 'mirror', 'create', 
@@ -132,7 +143,10 @@ class RepoManager(object):
                 '%s%s/%s/%s' % (self.api_url, self.api_user, repo_name, conf['os']),
                 conf['dist']
             ])
+        # update mirrors
         cmds.extend(self.aptly_update(repo_name, alias))
+
+        # Create snapshots and publish
         for conf in self.DISRS['deb']:
             name = '%s_%s' % (alias, conf['dist'])
             cmds.append([
@@ -154,23 +168,86 @@ class RepoManager(object):
         """
         Create rpm mirrors from packagecloud.io
         """
-        raise NotImplementedError
+        print 'Mirror creation start'
+        if alias is None:
+            alias = repo_name
+        cmds = []
+        # create clean repository
+        for conf in self.DISRS['rpm']:
+            name = '%s_%s%s' % (alias, conf['os'], conf['dist'])
+            path = RPM_PATH % name
+            src_path = SRPM_PATH % name
+            cmds.append(['mkdir', '-p', '%sPackages/' % path])
+            cmds.append(['mkdir', '-p', '%sPackages/' % src_path])
+        # download packages and run repo index
+        cmds.extend(self.manage_rpms(repo_name, alias, update=False))
+        for cmd in cmds:
+            self.run(cmd)
+        print 'Mirror creation done'
+
+    def manage_rpms(self, repo_name, alias=None, update=True):
+        """
+        Internal function for working with reposync and createrepo
+        """
+        if alias is None:
+            alias = repo_name
+        cmds = []
+        for conf in self.DISRS['rpm']:
+            name = '%s_%s%s' % (alias, conf['os'], conf['dist'])
+            path = RPM_PATH % name
+            srpm_path = SRPM_PATH % name
+            repo = '%s_%s%s' % (API_REPO, conf['os'], conf['dist'])
+            srpm_repo = '%s-source_%s%s' % (API_REPO, conf['os'], conf['dist'])
+            # sync packages
+            rpm_cmd = [
+                "reposync", "--repoid=%s" % repo, "-l",
+                "--download_path=%sPackages/" % path, "--norepopath"
+            ]
+            # sync sources packages
+            srpm_cmd = [
+                "reposync", "--repoid=%s" % srpm_repo, "--source",
+                "--download_path=%sPackages/" % srpm_path, "--norepopath"
+            ]
+            # check that we need only new packages
+            if update:
+                rpm_cmd.append('-n')
+                srpm_cmd.append('-n')
+            cmds.append(rpm_cmd)
+            cmds.append(srpm_cmd)
+
+            # update repository metadata
+            cmds.append(["createrepo", '-o', path, path])
+            cmds.append(["createrepo", '-o', srpm_path, srpm_path])
+        return cmds
 
     def update_rpms(self, repo_name, alias=None):
-        raise NotImplementedError
+        """
+        manage_rpms wrapper for repo updates
+        """
+        print "RPM update start"
+        for cmd in self.manage_rpms(repo_name, alias):
+            self.run(cmd)
+        print "RPM update end"
 
     def update_mirrors(self, repo_name, alias=None):
         """
         Update mirrors and push all changes to local repositories
         """
         self.update_debs(repo_name, alias)
-        #self.update_rpms(repo_name, alias)
+        self.update_rpms(repo_name, alias)
+
+    def create_mirrors(self, repo_name, alias=None):
+        """
+        Create mirrors and push all changes to local repositories
+        """
+        self.mirror_deb(repo_name, alias)
+        self.mirror_rpm(repo_name, alias)
 
     def update_debs(self, repo_name, alias=None):
         """
         Update debian repos with aptly
         """
-        print "Update start"
+        print "Deb update start"
         if alias is None:
             alias = repo_name
         cmds = []
@@ -200,15 +277,46 @@ class RepoManager(object):
             ])
         for cmd in cmds:
             self.run(cmd)
-        print 'Update done'
+        print 'Deb update done'
         
 
     def run(self, cmd):
-        print ' '.join(cmd)
+        """
+        External shell commands runner
+        """
         p = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         out, err = p.communicate()
+        print ' '.join(cmd)
         print out
 	print err
         return err
+
+def help():
+    print 'Usage: python repo.py <token> <command>'
+    print 'commands:'
+    print '\tcreate - create all repositories'
+    print '\tupdate - update all repositories'
+    print '\tprune - prune all repositories'
+    exit(1)
+
+playbooks = {
+    'create': lambda m: m.create_mirrors(REPO),
+    'update': lambda m: m.update_mirrors(REPO),
+    'prune': lambda m: m.prune_all()
+}
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        help()
+
+    token = sys.argv[1]
+    playbook = sys.argv[2]
+
+    if playbook not in playbooks.keys():
+        help()
+
+    manager = RepoManager(token)
+    playbooks[playbook](manager)
+    exit(0)
