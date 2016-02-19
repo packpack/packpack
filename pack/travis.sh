@@ -197,6 +197,7 @@ if [ -n "${FTP_HOST}" ]; then
     echo "Exporting packages to FTP ${FTP_HOST}/${FTP_REPO}"
     #sudo apt-get install ftp
     cd ${RESULTS}
+    rm -f *.md5sum ftp.log
     cat > ftpscript.txt <<-EOF
 open ${FTP_HOST}
 user ${FTP_USER} ${FTP_PASSWORD}
