@@ -206,6 +206,8 @@ EOF
         echo "cd /${FTP_REPO}/${OS}/${DIST}/x86_64/Packages/" >> ftpscript.txt
         for f in *[!src].rpm; do
             if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> ftpscript.txt
             echo "put $f $f.tmp" >> ftpscript.txt
             echo "rename $f.tmp $f" >> ftpscript.txt
         done
@@ -213,6 +215,7 @@ EOF
         for f in *.src.rpm; do
             if [ ! -f $f ]; then continue; fi
             md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> ftpscript.txt
             echo "put $f $f.tmp" >> ftpscript.txt
             echo "rename $f.tmp $f" >> ftpscript.txt
         done
@@ -220,6 +223,8 @@ EOF
         echo "cd /${FTP_REPO}/${OS}/incoming/${DIST}" >> ftpscript.txt
         for f in *.deb *.dsc *.changes *.orig.tar.* *.debian.tar.*; do
             if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> ftpscript.txt
             echo "put $f $f.tmp" >> ftpscript.txt
             echo "rename $f.tmp $f" >> ftpscript.txt
         done
@@ -231,7 +236,8 @@ EOF
     echo "--"
     grep failed ftp.log > /dev/null
     if [ $? -eq 0 ]; then
-        echo "!! FTP Upload failed:"
+        echo "(!) FTP Upload failed :("
+        exit -1
     else
         echo "OK!"
     fi
