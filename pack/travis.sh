@@ -66,12 +66,19 @@ if [ -n "${TRAVIS_REPO_SLUG}" ]; then
         echo "Build skipped - the branch ${BRANCH} is not for packaging"
         exit 0
     fi
+    TRAVIS_REPO_USER=$(echo $TRAVIS_REPO_SLUG | cut -d '/' -f 1)
     if [ -z "${PACKAGECLOUD_REPO}" ]; then
-        TRAVIS_REPO_USER=$(echo $TRAVIS_REPO_SLUG | cut -d '/' -f 1)
         PACKAGECLOUD_REPO=${TRAVIS_REPO_USER}/$(echo ${BRANCH} | sed -e "s/\./_/")
         if [ "${TRAVIS_REPO_USER}" == "tarantool" ] && [ "${BRANCH}" == "master" ]; then
             # Upload all master branches from tarantool/X repos to tarantool/1_6
             PACKAGECLOUD_REPO="tarantool/1_6"
+        fi
+    fi
+    if [ -z "${FTP_REPO}" ]; then
+        FTP_REPO=${BRANCH}
+        if [ "${TRAVIS_REPO_USER}" == "tarantool" ] && [ "${BRANCH}" == "master" ]; then
+            # Upload all master branches from tarantool/X repos to tarantool/1_6
+            FTP_REPO="1.6"
         fi
     fi
     update_submodules
@@ -81,7 +88,9 @@ else
         echo "git rev-parse failed"
         exit -1
     fi
-
+    if [ -z "${FTP_REPO}" ]; then
+        FTP_REPO=${BRANCH}
+    fi
     if [ -z "${PACKAGECLOUD_REPO}" ]; then
         PACKAGECLOUD_REPO=${USER}/$(echo ${BRANCH} | sed -e "s/\./_/")
     fi
@@ -90,6 +99,13 @@ else
         name=$(basename "$origin")
         PRODUCT="${name%.*}"
     fi
+fi
+
+if [ -n "${FTP}" ]; then
+    FTP_USERPASSWORD=$(echo ${FTP} | cut -d '@' -f 1)
+    FTP_HOST=$(echo ${FTP} | cut -d '@' -f 2)
+    FTP_USER=$(echo ${FTP_USERPASSWORD} | cut -d ':' -f 1)
+    FTP_PASSWORD=$(echo ${FTP_USERPASSWORD} | cut -d ':' -f 2)
 fi
 
 [ -n "${PRODUCT}" ] || usage "Missing PRODUCT"
@@ -111,6 +127,11 @@ echo "Product:          ${PRODUCT}"
 echo "Version:          ${VERSION} (branch ${BRANCH})"
 echo "Target:           ${OSDIST}"
 echo "Docker Image:     ${DOCKER_TAG}"
+if [ -n "${FTP}" ]; then
+    echo "FTP host:         ${FTP_HOST} (repo ${FTP_REPO})"
+else
+    echo "FTP host:         skipped - missing FTP"
+fi
 if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
     echo "PackageCloud:     ${PACKAGECLOUD_REPO}"
 else
@@ -170,6 +191,51 @@ fi
 if [ $? -ne 0 ]; then
     echo "Build failed"
     exit -1
+fi
+
+if [ -n "${FTP_HOST}" ]; then
+    echo "Exporting packages to FTP ${FTP_HOST}/${FTP_REPO}"
+    #sudo apt-get install ftp
+    cd ${RESULTS}
+    cat > ftpscript.txt <<-EOF
+open ${FTP_HOST}
+user ${FTP_USER} ${FTP_PASSWORD}
+pass
+EOF
+    if [ "${PACK}" == "rpm" ]; then
+        echo "cd /${FTP_REPO}/${OS}/${DIST}/x86_64/Packages/" >> ftpscript.txt
+        for f in *[!src].rpm; do
+            if [ ! -f $f ]; then continue; fi
+            echo "put $f $f.tmp" >> ftpscript.txt
+            echo "rename $f.tmp $f" >> ftpscript.txt
+        done
+        echo "cd /${FTP_REPO}/${OS}/${DIST}/SRPMS/Packages/" >> ftpscript.txt
+        for f in *.src.rpm; do
+            if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f $f.tmp" >> ftpscript.txt
+            echo "rename $f.tmp $f" >> ftpscript.txt
+        done
+    elif [ "${PACK}" == "deb" ]; then
+        echo "cd /${FTP_REPO}/${OS}/incoming/${DIST}" >> ftpscript.txt
+        for f in *.deb *.dsc *.changes *.orig.tar.* *.debian.tar.*; do
+            if [ ! -f $f ]; then continue; fi
+            echo "put $f $f.tmp" >> ftpscript.txt
+            echo "rename $f.tmp $f" >> ftpscript.txt
+        done
+    fi
+    echo "--"
+    tail -n +3 ftpscript.txt
+    echo "--"
+    ftp -i -n -v < ftpscript.txt | tail -n +3| tee ftp.log
+    echo "--"
+    grep failed ftp.log > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "!! FTP Upload failed:"
+    else
+        echo "OK!"
+    fi
+    rm -f ftpscript.txt
 fi
 
 if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
