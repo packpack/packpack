@@ -1,6 +1,7 @@
 from posixpath import join as pathjoin
 import subprocess
 import requests
+import os
 import sys
 
 API_URL = "https://packagecloud.io/"
@@ -10,6 +11,9 @@ API_REPO = 'tarantool_%s' % '1_6'
 
 RPM_PATH = './%s/x86_64/'
 SRPM_PATH = './%s/SRPMS/'
+
+# tarantool archive public key id
+GPG_KEY = '4005CF6B'
 
 class RepoManager(object):
     """
@@ -155,7 +159,8 @@ class RepoManager(object):
             ])
             cmds.append([
                 "aptly", "publish", "snapshot",
-                "-force-overwrite=true", "-skip-signing=true",
+                "-force-overwrite=true", '-gpg-key=%s' % GPG_KEY,
+                "-architectures=amd64,i386,source",
                 name, name
             ])
         for cmd in cmds:
@@ -268,7 +273,7 @@ class RepoManager(object):
             # switch old and new
             cmds.append([
                 "aptly", "publish", "switch",
-                "-force-overwrite=true", "-skip-signing=true",
+                "-force-overwrite=true", '-gpg-key=%s' % GPG_KEY,
                 conf['dist'], name, name
             ])
             # remove old snapshot
