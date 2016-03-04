@@ -44,6 +44,8 @@ $(DEB_NAME)-$(RELEASE).dsc: $(NAME)/debian/changelog $(DEB_TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
+	# Clear APT cache to fix Hash sum mismatch
+	sudo rm -rf /var/lib/apt/lists/*
 	sudo apt-get update > /dev/null
 	cd $(NAME) && sudo mk-build-deps -i --tool "apt-get -y" || :
 	cd $(NAME) && sudo rm -f *build-deps_*_all.deb
