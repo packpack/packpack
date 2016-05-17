@@ -11,7 +11,6 @@ API_REPO = 'tarantool_%s' % '1_6'
 
 RPM_PATH = './%s/x86_64/'
 SRPM_PATH = './%s/SRPMS/'
-
 # tarantool archive public key id
 GPG_KEY = '4005CF6B'
 
@@ -49,7 +48,7 @@ class RepoManager(object):
         ]
     }
 
-    def __init__(self, token, user=API_USER, url=API_URL, limit=5):
+    def __init__(self, token, user=API_USER, url=API_URL, limit=2):
         self.api_url = url
         self.auth = (token, '')
         self.api_user = user
@@ -71,7 +70,6 @@ class RepoManager(object):
         """
         Drop package from package cloud
         """
-        print('prune', name, path)
         resp = requests.delete(self.api_path(path), auth=self.auth)
         resp.raise_for_status()
 
@@ -100,7 +98,7 @@ class RepoManager(object):
         """
         path = pathjoin(
             "api", "v1", "repos", self.api_user,
-            repo, "packages", "{}.json".format(kind)
+            repo, "packages", "{}.json?per_page=500".format(kind)
         )
         packages = self.get(path)
         for package in packages:
@@ -119,16 +117,14 @@ class RepoManager(object):
         """
         Generate commands to update each debian based os/dist
         """
-	result = []
+        result = []
         if alias is None:
             alias = repo_name
         for conf in self.DISRS['deb']:
             name = '%s_%s' % (alias, conf['dist'])
-	    result.append([
-            	"aptly", "mirror", "update",
-                "-ignore-checksums=true", name
-   	    ])
-	return result
+            result.append(["aptly", "mirror", "update",
+                "-ignore-checksums=true", name])
+        return result
 
     def mirror_deb(self, repo_name, alias=None):
         """
@@ -295,7 +291,7 @@ class RepoManager(object):
         out, err = p.communicate()
         print ' '.join(cmd)
         print out
-	print err
+        print err
         return err
 
 def help():
@@ -318,7 +314,7 @@ if __name__ == '__main__':
 
     token = sys.argv[1]
     playbook = sys.argv[2]
-
+    
     if playbook not in playbooks.keys():
         help()
 
