@@ -33,6 +33,7 @@ env:
       - OS=centos DIST=7 PACK=rpm
       - OS=fedora DIST=22 PACK=rpm
       - OS=fedora DIST=23 PACK=rpm
+      - OS=fedora DIST=24 PACK=rpm
       - OS=fedora DIST=rawhide PACK=rpm
       - OS=ubuntu DIST=trusty PACK=deb
       - OS=ubuntu DIST=precise PACK=deb
