@@ -20,8 +20,9 @@ $(COVERAGE_INFO):
 		echo ""; \
 		exit 1; \
 	fi
-	lcov --directory src/ --capture > $@.tmp
-	lcov --remove $@.tmp 'tests/*' 'third_party/*' '/usr/*' > $@
+	lcov --directory src/ --capture --output-file $@.tmp
+	lcov --remove $@.tmp 'tests/*' 'third_party/*' '/usr/*' \
+		--output-file $@
 	rm -f $@.tmp
 
 summary: $(COVERAGE_INFO)
