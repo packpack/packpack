@@ -1,0 +1,56 @@
+#!/usr/bin/make -f
+
+COVERAGE_INFO=coverage.info
+COVERAGE_HTML=coverage/index.html
+
+all:
+	@echo "Usage  $1"
+	@echo "$0 summary        - display summary information"
+	@echo "$0 list           - display coverage for files"
+	@echo "$0 html           - generate html report in $(dir $(COVERAGE_HTML))"
+	@echo "$0 browser        - generate html report and open it in browser"
+	@echo "$0 upload         - upload data to coveralls.info"
+	@echo "$0 zerocounters   - reset all counters"
+	@echo "$0 clean          - remove generated reports"
+
+$(COVERAGE_INFO):
+	@if ! lcov --version 2> /dev/null; then \
+		echo "Please install lcov:"; \
+		echo "sudo apt-get install lcov"; \
+		echo ""; \
+		exit 1; \
+	fi
+	lcov --directory src/ --capture > $@.tmp
+	lcov --remove $@.tmp 'tests/*' 'third_party/*' '/usr/*' > $@
+	rm -f $@.tmp
+
+summary: $(COVERAGE_INFO)
+	lcov --summary $<
+
+list: $(COVERAGE_INFO)
+	lcov --list $<
+
+${COVERAGE_HTML}: ${COVERAGE_INFO}
+	genhtml --prefix $@ $< --output-directory=$(dir $@) \
+		--title $(shell git describe)
+
+html: ${COVERAGE_HTML}
+browser: ${COVERAGE_HTML}
+	xdg-open $< || open $<
+
+upload:
+	@if [ -z "${COVERALLS_TOKEN}" ]; then \
+		echo "Missing COVERALLS_TOKEN environment variable"; \
+		exit 1; \
+	fi;
+	@echo "Exporting code coverage information to coveralls.io"
+	coveralls-lcov --repo-token ${COVERALLS_TOKEN} ${COVERAGE_INFO}
+
+zerocounters:
+	@lcov --zerocounters -d src/
+	rm -f $(COVERAGE_INFO)
+
+clean:
+	rm -rf $(COVERAGE_INFO) $(dir $(COVERAGE_HTML))
+
+.PHONY: summary list browser upload clean
