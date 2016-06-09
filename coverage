@@ -38,13 +38,13 @@ html: ${COVERAGE_HTML}
 browser: ${COVERAGE_HTML}
 	xdg-open $< || open $<
 
-upload:
+upload: ${COVERAGE_INFO}
 	@if [ -z "${COVERALLS_TOKEN}" ]; then \
 		echo "Missing COVERALLS_TOKEN environment variable"; \
 		exit 1; \
 	fi;
 	@echo "Exporting code coverage information to coveralls.io"
-	coveralls-lcov --repo-token ${COVERALLS_TOKEN} ${COVERAGE_INFO}
+	@coveralls-lcov --repo-token ${COVERALLS_TOKEN} $(COVERAGE_INFO)
 
 zerocounters:
 	@lcov --zerocounters -d src/

@@ -20,23 +20,52 @@ usage() {
     exit 1
 }
 
-update_submodules() {
-    git submodule update --init --recursive
-    if [ $? -ne 0 ]; then
-        echo "Failed to update submodules"
-        exit -1
-    fi
-}
+git submodule update --init --recursive
+if [ $? -ne 0 ]; then
+    echo "Failed to update submodules"
+    exit -1
+fi
+
+VERSION=$(git describe --long --always)
+if [ -z "${VERSION}" ]; then
+    echo "Failed to get version from git describe"
+    exit -1
+fi
+
+# Save git describe result to VERSION file
+echo ${VERSION} > VERSION
 
 if [ "$PACK" == "none" ]; then
-    echo 'Test-only mode'
-    update_submodules
+    echo 'Test mode'
     if [ -f test.sh ]; then
         echo 'Found test.sh script'
         exec bash test.sh
     elif [ -f .build.mk ]; then
         echo 'Found .build.mk script'
-        exec make -f .build.mk test
+        exec make -f .build.mk travis_test_${TRAVIS_OS_NAME}
+    fi
+    exit 0
+elif [ "$PACK" == "coverage" ]; then
+    echo 'Coverage mode'
+    if [ ! -f .build.mk ]; then
+        echo "Missing .build.mk"
+        exit 1
+    fi
+
+    sudo apt-get -q -y install lcov
+    [ $? -eq 0  ] || exit $?
+
+    make -f .build.mk travis_coverage
+    [ $? -eq 0  ] || exit $?
+
+    ${SCRIPT_DIR}/coverage list
+    [ $? -eq 0  ] || exit $?
+
+    if [ -n "${COVERALLS_TOKEN}"  ]; then
+        gem install coveralls-lcov
+        ${SCRIPT_DIR}/coverage upload
+        [ $? -eq 0  ] || exit $?
+        exit 0
     fi
     exit 0
 fi
@@ -49,12 +78,6 @@ if [ "${OS}" == "el" ]; then
 fi
 [ -n "${DIST}" ] || usage "Missing DIST"
 [ -x ${SCRIPT_DIR}/build ] || usage "Missing ./build"
-
-VERSION=$(git describe --long --always)
-if [ -z "${VERSION}" ]; then
-    echo "get describe failed"
-    exit -1
-fi
 
 if [ -n "${TRAVIS_REPO_SLUG}" ]; then
     echo "Travis CI detected"
@@ -81,7 +104,6 @@ if [ -n "${TRAVIS_REPO_SLUG}" ]; then
             FTP_REPO="1.6"
         fi
     fi
-    update_submodules
 else
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
     if [ -z "${BRANCH}" ]; then
@@ -144,9 +166,6 @@ echo
 echo "Cleaning buildroot"
 rm -rf buildroot/
 git clean -f -X -d
-
-# Save git describe result to VERSION file
-echo "Generating VERSION"
 echo ${VERSION} > VERSION
 
 ROCKSPEC=$(ls -1 *.rockspec rockspec/*-scm*.rockspec 2> /dev/null)
