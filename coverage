@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
-COVERAGE_INFO=coverage.info
-COVERAGE_HTML=coverage/index.html
+COVERAGE_INFO:=coverage.info
+COVERAGE_HTML:=coverage/index.html
 
 all:
 	@echo "Usage  $1"
@@ -20,11 +20,12 @@ $(COVERAGE_INFO):
 		echo ""; \
 		exit 1; \
 	fi
-	lcov --directory src/ --capture --output-file $$(pwd)/$@.tmp
-	lcov --remove $$(pwd)/$@.tmp 'tests/*' 'third_party/*' '/usr/*' \
-		--output-file $$(pwd)/$@
+	lcov --directory src/ --capture --output-file $(abspath $@).tmp
+	lcov --remove $(abspath $@.tmp) 'tests/*' 'third_party/*' '/usr/*' \
+		--output-file $(abspath $@)
 	rm -f $@.tmp
 
+collect: $(COVERAGE_INFO)
 summary: $(COVERAGE_INFO)
 	lcov --summary $<
 
@@ -44,8 +45,9 @@ upload: ${COVERAGE_INFO}
 		echo "Missing COVERALLS_TOKEN environment variable"; \
 		exit 1; \
 	fi;
-	@echo "Exporting code coverage information to coveralls.io"
-	@coveralls-lcov --repo-token ${COVERALLS_TOKEN} $(COVERAGE_INFO)
+	@echo "Exporting code coverage information to coveralls.io"i
+	@echo coveralls-lcov --repo-token [FILTERED] $(abspath $(COVERAGE_INFO))
+	@coveralls-lcov --repo-token ${COVERALLS_TOKEN} $(abspath $(COVERAGE_INFO))
 
 zerocounters:
 	@lcov --zerocounters -d src/
