@@ -2,6 +2,7 @@ FROM centos:7
 # A container used to build CentOS packages and develop Tarantool
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
+RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum -y groupinstall "Development Tools"
 RUN yum -y install yum-utils rpm-build rpmdevtools
 RUN yum -y install sudo vim wget mc git
