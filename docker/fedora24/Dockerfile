@@ -8,7 +8,7 @@ RUN dnf -y install fedora-packager fedora-review
 RUN dnf -y install sudo vim wget mc git
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
 
-ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
+ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 # Fix paths for mock
 ENV PATH /usr/bin:/usr/sbin:/bin:/sbin
 
