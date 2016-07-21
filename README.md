@@ -11,12 +11,14 @@ Just a minute from the push to packages!
 - [RPM] spec should be placed to `rpm/${myreponame}.spec` and
   [Debian] rules to `debian/`, respectively:
 
-    # Sanity checks
-    $ cd mypproject/
-    myproject$ [ -f rpm/myproject.spec  ] && echo "RPM spec exists"
-    RPM spec exists
-    myproject$ [ -f debian/rules ] && echo "Debian rules exists"
-    Debian rules exists
+## Sanity checks
+```sh
+$ cd mypproject/
+myproject$ [ -f rpm/myproject.spec  ] && echo "RPM spec exists"
+RPM spec exists
+myproject$ [ -f debian/rules ] && echo "Debian rules exists"
+Debian rules exists
+```
 
 ## Usage on Travis
 
