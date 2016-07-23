@@ -3,7 +3,7 @@
 SCRIPT=$(readlink -f $0)
 SCRIPT_DIR=$(readlink -f $(dirname ${SCRIPT})/../)
 
-ENABLED_BRANCHES="master 1.6 1.7"
+ENABLED_BRANCHES="${ENABLED_BRANCHES:-master 1.6 1.7}"
 DOCKER_REPO="tarantool/build"
 #DOCKER_REPO="rtsisyk/build"
 
