@@ -26,7 +26,7 @@ if [ $? -ne 0 ]; then
     exit -1
 fi
 
-VERSION=$(git describe --long --always)
+VERSION=$(git describe --long --always --tags)
 if [ -z "${VERSION}" ]; then
     echo "Failed to get version from git describe"
     exit -1
