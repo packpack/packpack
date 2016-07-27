@@ -5,12 +5,12 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum -y groupinstall "Development Tools"
 RUN yum -y install yum-utils rpm-build rpmdevtools
-RUN yum -y install sudo wget git
+RUN yum -y install sudo wget git ccache
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
 
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 # Fix paths for mock
-ENV PATH /usr/bin:/usr/sbin:/bin:/sbin
+ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
 RUN yum -y install cmake3 readline-devel libyaml-devel binutils-devel \

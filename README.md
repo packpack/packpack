@@ -29,6 +29,8 @@ sudo: required
 services:
   - docker
 
+cache: ccache
+
 env:
     matrix:
       - OS=centos DIST=6 PACK=rpm

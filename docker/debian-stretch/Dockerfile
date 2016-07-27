@@ -4,7 +4,7 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 # Bug#813000: apt complains about corrupted index files even after multiple updates
 RUN echo 'APT::Compressor::lz4::Cost "5000";' > /etc/apt/apt.conf.d/disable-lz4
 RUN apt-get update && apt-get install -y --force-yes \
-    build-essential gdb git \
+    build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
     sudo
 

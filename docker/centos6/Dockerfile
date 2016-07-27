@@ -6,7 +6,7 @@ RUN curl http://people.centos.org/tru/devtools-1.1/devtools-1.1.repo -o /etc/yum
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 RUN yum -y install devtoolset-1.1
 RUN yum -y install yum-utils rpm-build rpmdevtools
-RUN yum -y install sudo wget git
+RUN yum -y install sudo wget git ccache
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
 
 RUN echo "source /opt/centos/devtoolset-1.1/enable" > /etc/profile.d/devtoolset-1.1.sh
@@ -16,7 +16,7 @@ ENV CXX=/opt/centos/devtoolset-1.1/root/usr/bin/g++
 
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 # Fix paths for mock
-ENV PATH /usr/bin:/usr/sbin:/bin:/sbin
+ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
 RUN yum -y install cmake3 readline-devel libyaml-devel binutils-devel \
