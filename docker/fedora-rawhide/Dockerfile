@@ -5,7 +5,7 @@ RUN dnf -y group install 'Development Tools'
 RUN dnf -y group install 'C Development Tools and Libraries'
 RUN dnf -y group install 'RPM Development Tools'
 RUN dnf -y install fedora-packager fedora-review
-RUN dnf -y install sudo vim wget mc git
+RUN dnf -y install sudo wget git
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
 
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"

@@ -2,9 +2,9 @@ FROM debian:sid
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
 RUN apt-get update && apt-get install -y --force-yes \
-    build-essential gdb git vim \
+    build-essential gdb git \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo mc
+    sudo
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
