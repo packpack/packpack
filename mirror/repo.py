@@ -110,7 +110,7 @@ class RepoManager(object):
         Prune repo wrapper: get all repos and prune it
         """
         for repo in self.repos:
-            for kind in self.DISRS.keys():
+            for kind in ('dsc', 'rpm', 'deb'):
                 self.prune_repo(repo['name'], kind)
 
     def aptly_update(self, repo, alias=None):
