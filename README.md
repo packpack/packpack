@@ -43,6 +43,7 @@ env:
       - OS=ubuntu DIST=precise PACK=deb
       - OS=ubuntu DIST=wily PACK=deb
       - OS=ubuntu DIST=xenial PACK=deb
+      - OS=ubuntu DIST=yakkety PACK=deb
       - OS=debian DIST=jessie PACK=deb
       - OS=debian DIST=wheezy PACK=deb
       - OS=debian DIST=stretch PACK=deb

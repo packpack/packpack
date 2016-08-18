@@ -18,10 +18,10 @@ endif
 # List of supported OS
 #
 
-FEDORA:=fedora-rawhide fedora24 fedora23 fedora22
+FEDORA:=fedora-rawhide fedora24 fedora23
 CENTOS:=centos7 centos6
 DEBIAN:=debian-sid debian-stretch debian-jessie debian-wheezy
-UBUNTU:=ubuntu-xenial ubuntu-wily ubuntu-trusty ubuntu-precise
+UBUNTU:=ubuntu-yakkety ubuntu-xenial ubuntu-wily ubuntu-trusty ubuntu-precise
 
 DEBS:=$(DEBIAN) $(UBUNTU)
 RPMS:=$(FEDORA) $(CENTOS)
