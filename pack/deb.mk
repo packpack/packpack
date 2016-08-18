@@ -13,6 +13,12 @@ endif
 ifndef RELEASE
 $(error Missing RELEASE variable)
 endif
+ifndef DEBEMAIL
+DEBEMAIL="build@tarantool.org"
+endif
+ifndef DEBFULLNAME
+DEBFULLNAME="Tarantool Buildbot"
+endif
 
 # https://wiki.debian.org/IntroDebianPackaging:
 # The name consists of the source package name, an underscore, the upstream
@@ -39,7 +45,7 @@ $(DEB_NAME)-$(RELEASE).dsc: $(NAME)/debian/changelog $(DEB_TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Updating changelog"
 	@echo "-------------------------------------------------------------------"
-	cd $(NAME) && NAME="Tarantool Buildbot" DEBEMAIL="build@tarantool.org" \
+	cd $(NAME) && NAME=$(DEBFULLNAME) DEBEMAIL=$(DEBEMAIL) \
 		dch -b -v $(VERSION)-$(RELEASE) "Automatic build"
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"

@@ -26,7 +26,7 @@ luarocks/src/bin/luarocks:
 results: luarocks/src/bin/luarocks
 	rm -rf $@
 	@echo "-------------------------------------------------------------------"
-	@echo "Installing dependecies"
+	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
 	@echo
 	./deps.sh $(ROCK_SPEC)
