@@ -60,7 +60,7 @@ notifications:
 
 ```
 
-Enable [Travis integration] and [Packagecloud integration ] and then push
+Enable [Travis integration] and [Packagecloud integration] and then push
 changes to [GitHub].
 
 N.B. Now we build packages only for master branch (or for stuff hardcoded in
