@@ -106,6 +106,7 @@ $(BUILDROOT)/%/Dockerfile:
 	@echo "Generating Dockerfile"
 	@echo "-------------------------------------------------------------------"
 	@echo "FROM $(DOCKER_REPO):$(call osdist,$@)" > $@.tmp
+	@echo "RUN mkdir -p $$(dirname $${HOME})" >> $@.tmp
 	@echo "RUN useradd -s $${SHELL} -u $$(id -u) -d $${HOME} $${USER}" >> $@.tmp
 	@echo "RUN usermod -a -G wheel $${USER} || :;\\" >> $@.tmp
 	@echo "    usermod -a -G adm $${USER} || :;\\" >> $@.tmp
