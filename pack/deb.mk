@@ -49,7 +49,7 @@ $(DEB_NAME)-$(RELEASE).dsc: $(NAME)/debian/changelog $(DEB_TARBALL)
 	sudo rm -rf /var/lib/apt/lists/*
 	sudo apt-get update > /dev/null
 	cd $(NAME) && sudo mk-build-deps -i --tool "apt-get -y" || :
-	cd $(NAME) && sudo rm -f *build-deps_*_all.deb
+	cd $(NAME) && sudo rm -f *build-deps_*.deb
 	@echo
 	@echo "-------------------------------------------------------------------"
 	@echo "Building packages"
