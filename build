@@ -176,7 +176,7 @@ $(BUILDROOT)/rpm-%/results/.done: $(BUILDROOT)/rpm-%/$(PRODUCT).spec \
 # Copy debian/ to buildroot/$OS-$DIST
 $(BUILDROOT)/deb-%/debian/changelog: debian/changelog
 	@mkdir -p $(abspath $(dir $@)/../)
-	cp -fpR debian/ $(abspath $(dir $@)/../)
+	cp -fpR debian $(abspath $(dir $@)/../)
 
 # A rule to build DEB packages
 $(BUILDROOT)/deb-%/results/.done: $(BUILDROOT)/deb-%/debian/changelog \
