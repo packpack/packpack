@@ -71,6 +71,10 @@ elif [ "$PACK" == "coverage" ]; then
         exit 0
     fi
     exit 0
+elif [ -n "$PACK" -a -f $PACK ]; then
+    echo "Executing $PACK script"
+    bash $PACK
+    exit 0
 fi
 
 echo 'Packaging mode'
