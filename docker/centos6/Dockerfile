@@ -2,7 +2,7 @@ FROM centos:6
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
 # http://people.centos.org/tru/devtools-1.1/readme
-RUN curl http://people.centos.org/tru/devtools-1.1/devtools-1.1.repo -o /etc/yum.repos.d/devtools-1.1.repo
+RUN curl -L http://people.centos.org/tru/devtools-1.1/devtools-1.1.repo -o /etc/yum.repos.d/devtools-1.1.repo
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 RUN yum -y install devtoolset-1.1
 RUN yum -y install yum-utils rpm-build rpmdevtools
