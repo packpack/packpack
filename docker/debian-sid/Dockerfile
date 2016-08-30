@@ -4,14 +4,15 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo
+    sudo systemd
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 
 # Install dependencies to speed up builds
 RUN apt-get update && apt-get install -y \
-    cmake libreadline-dev libyaml-dev binutils-dev zlib1g-dev doxygen
+    cmake libreadline-dev libyaml-dev binutils-dev zlib1g-dev libssl-dev \
+    doxygen
 RUN apt-get update && apt-get install -y \
     python-pip python-dev python-daemon python-yaml \
     python-gevent python-six python-msgpack python-sphinx
