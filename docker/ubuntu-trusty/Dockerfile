@@ -4,7 +4,7 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo systemd
+    sudo systemd-services
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
