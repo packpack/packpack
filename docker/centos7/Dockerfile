@@ -16,7 +16,8 @@ ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 RUN yum -y install cmake cmake3 readline-devel libyaml-devel binutils-devel \
                    zlib-devel doxygen perl-Test-Harness openssl-devel
 RUN yum -y install python-pip python-devel python-daemon python-yaml \
-                   python-msgpack python-gevent python-six python-sphinx
+                   python-msgpack python-gevent python-six python-sphinx \
+                   mysql-devel postgresql-devel
 RUN yum -y install luajit luajit-devel lua lua-devel
 ADD tarantool_1_6.repo /etc/yum.repos.d/
 RUN yum -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'
