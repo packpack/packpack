@@ -8,7 +8,7 @@ RUN curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-5.noarch.r
 RUN curl -O https://download.postgresql.org/pub/repos/yum/9.1/redhat/rhel-5-x86_64/pgdg-redhat91-9.1-7.noarch.rpm
 RUN rpm -Uvh epel-release-latest-5.noarch.rpm
 RUN rpm -Uvh pgdg-redhat91-9.1-7.noarch.rpm
-RUN yum -y install devtoolset-2
+RUN yum -y install devtoolset-2-toolchain
 RUN yum -y install devtoolset-2-binutils-devel
 RUN yum -y install yum-utils rpm-build rpmdevtools openssl-devel postgresql91-devel mysql-devel
 RUN yum -y install sudo vim wget mc git
