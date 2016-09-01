@@ -332,7 +332,8 @@ if [ -n "${SFTP_HOST}" ]; then
     decrypt_travis_key
     cd ${RESULTS}
     rm -f *.md5sum sftp.log sftpscript.txt || break
-    if [ "${PACK}" == "rpm" ]; then
+    touch sftpscript.txt
+    if [ "${PACK}" == "rpm" -a -n "${SFTP_UPLOAD_RPM}" ]; then
         echo "cd /${REPO_PREFIX}/${OS}/${DIST}/x86_64/Packages/" >> sftpscript.txt
         for f in *[!src].rpm; do
             if [ ! -f $f ]; then continue; fi
@@ -349,7 +350,7 @@ if [ -n "${SFTP_HOST}" ]; then
             echo "put $f $f.tmp" >> sftpscript.txt
             echo "rename $f.tmp $f" >> sftpscript.txt
         done
-    elif [ "${PACK}" == "deb" ]; then
+    elif [ "${PACK}" == "deb"  -a -n "${SFTP_UPLOAD_DEB}" ]; then
         echo "cd /${REPO_PREFIX}/${OS}/incoming/${DIST}" >> sftpscript.txt
         for f in *.deb *.dsc *.changes *.orig.tar.* *.debian.tar.*; do
             if [ ! -f $f ]; then continue; fi
@@ -358,7 +359,7 @@ if [ -n "${SFTP_HOST}" ]; then
             echo "put $f $f.tmp" >> sftpscript.txt
             echo "rename $f.tmp $f" >> sftpscript.txt
         done
-    elif [ "${PACK}" == "source" ]; then
+    elif [ "${PACK}" == "source" -a -n "${SFTP_UPLOAD_SOURCE}" ]; then
         echo "cd /${REPO_PREFIX}/src/" >> sftpscript.txt
         for f in *.tar.*; do
             if [ ! -f $f ]; then continue; fi
