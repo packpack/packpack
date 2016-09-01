@@ -94,11 +94,11 @@ $(BUILDROOT)/$(TARBALL):
 	$(TAR) \
 		--exclude-vcs \
 		--exclude-backups \
-		--exclude='./$(RELBUILDROOT)' \
+		--exclude='$(SCRIPTDIR)' --exclude='./build' \
 		$(TARBALL_EXTRA_ARGS) \
 		--exclude=FreeBSD --exclude=debian --exclude=rpm \
 		--transform='s,^\.,$(NAME),S' \
-		-czf $@ . ./VERSION $(TARBALL_EXTRA_FILES)
+		-czvf $@ . ./VERSION $(TARBALL_EXTRA_FILES)
 
 # Copy tarball to buildroot/$OS-$DIST chroot
 $(BUILDROOT)/%/$(TARBALL): $(BUILDROOT)/$(TARBALL)
