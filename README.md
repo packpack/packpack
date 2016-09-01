@@ -10,6 +10,8 @@ Just a minute from the push to packages!
 - Docker, GNU `make` and `bash` (or just use Travis CI)
 - [RPM] spec should be placed to `rpm/${myreponame}.spec` and
   [Debian] rules to `debian/`, respectively:
+- For Mac OS X (macOS) support install 'gnu-tar', 'coreutils' and 'md5sha1sum'
+  packages with homebrew and Docker (dmg package from site)
 
 ## Sanity checks
 ```sh

@@ -1,7 +1,13 @@
 #!/bin/bash
+# set -x
 
-SCRIPT=$(readlink -f $0)
-SCRIPT_DIR=$(readlink -f $(dirname ${SCRIPT})/../)
+READLINK="readlink -f"
+if [ ! -z $(which realpath) ]; then
+    READLINK="realpath"
+fi
+
+SCRIPT=$($READLINK $0)
+SCRIPT_DIR=$($READLINK $(dirname ${SCRIPT})/../)
 
 ENABLED_BRANCHES="${ENABLED_BRANCHES:-master 1.6 1.7}"
 DOCKER_REPO="tarantool/build"
@@ -17,6 +23,26 @@ usage() {
     echo "Please refer to README.md for additional information"
     echo
     exit 1
+}
+
+decrypt_travis_key() {
+    DECRYPTED_KEY_PATH=${DECRYPTED_KEY_PATH:-"extra/deploy_key"}
+    ENCRYPTED_KEY_PATH=${ENCRYPTED_KEY_PATH:-"${DECRYPTED_KEY_PATH}.enc"}
+    if [ ! -f "$DECRYPTED_KEY_PATH" ]; then
+        if [ -z "${ENCRYPTION_LABEL}" ]; then
+            echo "Failed to decrypt deployment key (not on Travis-CI)"
+            return
+        fi
+        ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
+        ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
+        ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
+        ENCRYPTED_IV=${!ENCRYPTED_IV_VAR}
+        openssl aes-256-cbc -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV \
+            -in "$ENCRYPTED_KEY_PATH" -out "$DECRYPTED_KEY_PATH" -d
+        chmod 600 $DECRYPTED_KEY_PATH
+    fi
+    eval `ssh-agent -s`
+    ssh-add $DECRYPTED_KEY_PATH
 }
 
 git submodule update --init --recursive
@@ -70,7 +96,7 @@ elif [ "$PACK" == "coverage" ]; then
         exit 0
     fi
     exit 0
-elif [ -n "$PACK" -a -f $PACK ]; then
+elif [ -n "$PACK" -a -f "$PACK" ]; then
     echo "Executing $PACK script"
     bash $PACK
     exit 0
@@ -78,11 +104,11 @@ fi
 
 echo 'Packaging mode'
 
-[ -n "${OS}" ] || usage "Missing OS"
+[ -n "${OS}" ] || [ "$PACK" == "source" ] || usage "Missing OS"
 if [ "${OS}" == "el" ]; then
     OS=centos
 fi
-[ -n "${DIST}" ] || usage "Missing DIST"
+[ -n "${DIST}" ] || [ "$PACK" == "source"  ] || usage "Missing DIST"
 [ -x ${SCRIPT_DIR}/build ] || usage "Missing ./build"
 
 if [ -n "${TRAVIS_REPO_SLUG}" ]; then
@@ -103,11 +129,11 @@ if [ -n "${TRAVIS_REPO_SLUG}" ]; then
             PACKAGECLOUD_REPO="tarantool/1_6"
         fi
     fi
-    if [ -z "${FTP_REPO}" ]; then
-        FTP_REPO=${BRANCH}
+    if [ -z "${REPO_PREFIX}" ]; then
+        REPO_PREFIX=${BRANCH}
         if [ "${TRAVIS_REPO_USER}" == "tarantool" ] && [ "${BRANCH}" == "master" ]; then
             # Upload all master branches from tarantool/X repos to tarantool/1_6
-            FTP_REPO="1.6"
+            REPO_PREFIX="1.6"
         fi
     fi
 else
@@ -116,8 +142,8 @@ else
         echo "git rev-parse failed"
         exit -1
     fi
-    if [ -z "${FTP_REPO}" ]; then
-        FTP_REPO=${BRANCH}
+    if [ -z "${REPO_PREFIX}" ]; then
+        REPO_PREFIX=${BRANCH}
     fi
     if [ -z "${PACKAGECLOUD_REPO}" ]; then
         PACKAGECLOUD_REPO=${USER}/$(echo ${BRANCH} | sed -e "s/\./_/")
@@ -134,6 +160,13 @@ if [ -n "${FTP}" ]; then
     FTP_HOST=$(echo ${FTP} | cut -d '@' -f 2)
     FTP_USER=$(echo ${FTP_USERPASSWORD} | cut -d ':' -f 1)
     FTP_PASSWORD=$(echo ${FTP_USERPASSWORD} | cut -d ':' -f 2)
+fi
+
+if [ -n "${SFTP}" ]; then
+    SFTP_USERPASSWORD=$(echo ${SFTP} | cut -d '@' -f 1)
+    SFTP_HOST=$(echo ${SFTP} | cut -d '@' -f 2)
+    SFTP_USER=$(echo ${SFTP_USERPASSWORD} | cut -d ':' -f 1)
+    SFTP_PASSWORD=$(echo ${SFTP_USERPASSWORD} | cut -d ':' -f 2)
 fi
 
 [ -n "${PRODUCT}" ] || usage "Missing PRODUCT"
@@ -153,13 +186,23 @@ echo
 echo '-----------------------------------------------------------'
 echo "Product:          ${PRODUCT}"
 echo "Version:          ${VERSION} (branch ${BRANCH})"
-echo "Target:           ${OSDIST}"
-echo "Docker Image:     ${DOCKER_TAG}"
+if ! { [ -z "$OS" ] || [ -z "$DIST" ]; } then
+    echo "Target:           ${OSDIST}"
+    echo "Docker Image:     ${DOCKER_TAG}"
+fi
+
 if [ -n "${FTP}" ]; then
-    echo "FTP host:         ${FTP_HOST} (repo ${FTP_REPO})"
+    echo "FTP host:         ${FTP_HOST} (repo ${REPO_PREFIX})"
 else
     echo "FTP host:         skipped - missing FTP"
 fi
+
+if [ -n "${SFTP}" ]; then
+    echo "SFTP host:        ${SFTP_HOST} (repo ${REPO_PREFIX})"
+else
+    echo "SFTP host:        skipped - missing SFTP"
+fi
+
 if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
     echo "PackageCloud:     ${PACKAGECLOUD_REPO}"
 else
@@ -179,7 +222,11 @@ ROCKSPEC=$(ls -1 *.rockspec rockspec/*-scm*.rockspec 2> /dev/null)
 echo "Make version is:"
 make --version
 
-RESULTS=${SCRIPT_DIR}/root/${PACK}-${OSDIST}/results/
+if ! { [ -z "$OS" ] || [ -z "$DIST" ]; } then
+    RESULTS=${SCRIPT_DIR}/root/${PACK}-${OSDIST}/results/
+else
+    RESULTS=${SCRIPT_DIR}/root/
+fi
 
 if [ "${PACK}" == "rpm" ]; then
     if [ -f "rpm/${PRODUCT}.spec" ] ; then
@@ -209,6 +256,8 @@ elif [ "${PACK}" == "deb" ]; then
         echo "Can't find debian/"
         exit 1
     fi
+elif [ "${PACK}" == "source" ]; then
+    ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} tarball
 else
     usage "Invalid PACK value"
 fi
@@ -219,7 +268,7 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ -n "${FTP_HOST}" ]; then
-    echo "Exporting packages to FTP ${FTP_HOST}/${FTP_REPO}"
+    echo "Exporting packages to FTP ${FTP_HOST}/${REPO_PREFIX}"
     #sudo apt-get install ftp
     cd ${RESULTS}
     rm -f *.md5sum ftp.log
@@ -229,7 +278,7 @@ user ${FTP_USER} ${FTP_PASSWORD}
 pass
 EOF
     if [ "${PACK}" == "rpm" ]; then
-        echo "cd /${FTP_REPO}/${OS}/${DIST}/x86_64/Packages/" >> ftpscript.txt
+        echo "cd /${REPO_PREFIX}/${OS}/${DIST}/x86_64/Packages/" >> ftpscript.txt
         for f in *[!src].rpm; do
             if [ ! -f $f ]; then continue; fi
             md5sum $f > $f.md5sum
@@ -237,7 +286,7 @@ EOF
             echo "put $f $f.tmp" >> ftpscript.txt
             echo "rename $f.tmp $f" >> ftpscript.txt
         done
-        echo "cd /${FTP_REPO}/${OS}/${DIST}/SRPMS/Packages/" >> ftpscript.txt
+        echo "cd /${REPO_PREFIX}/${OS}/${DIST}/SRPMS/Packages/" >> ftpscript.txt
         for f in *.src.rpm; do
             if [ ! -f $f ]; then continue; fi
             md5sum $f > $f.md5sum
@@ -246,10 +295,18 @@ EOF
             echo "rename $f.tmp $f" >> ftpscript.txt
         done
     elif [ "${PACK}" == "deb" ]; then
-        echo "cd /${FTP_REPO}/${OS}/incoming/${DIST}" >> ftpscript.txt
+        echo "cd /${REPO_PREFIX}/${OS}/incoming/${DIST}" >> ftpscript.txt
         for f in *.deb *.dsc *.changes *.orig.tar.* *.debian.tar.*; do
             if [ ! -f $f ]; then continue; fi
             md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> ftpscript.txt
+            echo "put $f $f.tmp" >> ftpscript.txt
+            echo "rename $f.tmp $f" >> ftpscript.txt
+        done
+    elif [ "${PACK}" == "source" ]; then
+        echo "cd /${REPO_PREFIX}/src/" >> ftpscript.txt
+        for f in *.tar.* *.zip *.rar; do
+            if [ ! -f $f ]; then continue; fi
             echo "put $f.md5sum" >> ftpscript.txt
             echo "put $f $f.tmp" >> ftpscript.txt
             echo "rename $f.tmp $f" >> ftpscript.txt
@@ -258,16 +315,73 @@ EOF
     echo "--"
     tail -n +3 ftpscript.txt
     echo "--"
-    ftp -i -n -v < ftpscript.txt | tail -n +3| tee ftp.log
+    ftp -i -n -v < ftpscript.txt | tail -n +3 | tee ftp.log
     echo "--"
     grep failed ftp.log > /dev/null
+    rm -f ftpscript.txt
     if [ $? -eq 0 ]; then
         echo "(!) FTP Upload failed :("
         exit -1
     else
         echo "OK!"
     fi
-    rm -f ftpscript.txt
+fi
+
+if [ -n "${SFTP_HOST}" ]; then
+    echo "Exporting packages to SFTP ${SFTP_HOST}/${REPO_PREFIX}"
+    decrypt_travis_key
+    cd ${RESULTS}
+    rm -f *.md5sum sftp.log sftpscript.txt || break
+    if [ "${PACK}" == "rpm" ]; then
+        echo "cd /${REPO_PREFIX}/${OS}/${DIST}/x86_64/Packages/" >> sftpscript.txt
+        for f in *[!src].rpm; do
+            if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> sftpscript.txt
+            echo "put $f $f.tmp" >> sftpscript.txt
+            echo "rename $f.tmp $f" >> sftpscript.txt
+        done
+        echo "cd /${REPO_PREFIX}/${OS}/${DIST}/SRPMS/Packages/" >> sftpscript.txt
+        for f in *.src.rpm; do
+            if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> sftpscript.txt
+            echo "put $f $f.tmp" >> sftpscript.txt
+            echo "rename $f.tmp $f" >> sftpscript.txt
+        done
+    elif [ "${PACK}" == "deb" ]; then
+        echo "cd /${REPO_PREFIX}/${OS}/incoming/${DIST}" >> sftpscript.txt
+        for f in *.deb *.dsc *.changes *.orig.tar.* *.debian.tar.*; do
+            if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> sftpscript.txt
+            echo "put $f $f.tmp" >> sftpscript.txt
+            echo "rename $f.tmp $f" >> sftpscript.txt
+        done
+    elif [ "${PACK}" == "source" ]; then
+        echo "cd /${REPO_PREFIX}/src/" >> sftpscript.txt
+        for f in *.tar.*; do
+            if [ ! -f $f ]; then continue; fi
+            md5sum $f > $f.md5sum
+            echo "put $f.md5sum" >> sftpscript.txt
+            echo "put $f $f.tmp" >> sftpscript.txt
+            echo "rename $f.tmp $f" >> sftpscript.txt
+        done
+    fi
+    echo "-- sftpscript.txt content"
+    cat sftpscript.txt
+    echo "-- output of task"
+    cat sftpscript.txt | sftp -o "StrictHostKeyChecking no" ${SFTP_USER}@${SFTP_HOST} -v 2>&1 | tee sftp.log
+    echo "-- task result"
+    grep "failed\|Permission denied\|No such file or directory" sftp.log > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "(!) SFTP Upload failed :("
+        rm -f sftpscript.txt
+        exit -1
+    else
+        echo "OK!"
+    fi
+    rm -f sftpscript.txt
 fi
 
 if [ -n "${PACKAGECLOUD_TOKEN}" ]; then

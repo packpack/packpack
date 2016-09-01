@@ -79,6 +79,11 @@ $(info Tarantool/Build for $(PRODUCT) $(VERSION))
 # Build all RPMS and all DEBS
 all: $(DEBS) $(RPMS)
 
+TAR:=tar
+ifneq ($(strip $(shell which gtar)), )
+	TAR=gtar
+endif
+
 # Create tarball in buildroot
 # --exclude-vcs-ignores is broken
 $(BUILDROOT)/$(TARBALL):
@@ -86,7 +91,7 @@ $(BUILDROOT)/$(TARBALL):
 	@echo "-------------------------------------------------------------------"
 	@echo "Creating source tarball"
 	@echo "-------------------------------------------------------------------"
-	tar \
+	$(TAR) \
 		--exclude-vcs \
 		--exclude-backups \
 		--exclude='./$(RELBUILDROOT)' \
