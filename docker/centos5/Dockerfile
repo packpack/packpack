@@ -25,7 +25,7 @@ ENV PATH /usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
 RUN yum -y install readline-devel libyaml-devel binutils-devel \
-                   zlib-devel doxygen perl-Test-Harness
+                   zlib-devel doxygen perl-Test-Harness openssl-devel
 RUN yum -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx \
                    python-hashlib buildsys-macros cmake28

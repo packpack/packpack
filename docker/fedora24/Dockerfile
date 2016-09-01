@@ -14,7 +14,8 @@ ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
 RUN dnf -y install cmake readline-devel libyaml-devel binutils-devel \
-                   zlib-devel doxygen perl-podlators perl-Test-Harness systemd
+                   zlib-devel doxygen perl-podlators perl-Test-Harness \
+                   openssl-devel systemd
 RUN dnf -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx
 RUN dnf -y install luajit luajit-devel lua lua-devel

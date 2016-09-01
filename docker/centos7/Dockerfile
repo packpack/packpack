@@ -13,8 +13,8 @@ ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
-RUN yum -y install cmake3 readline-devel libyaml-devel binutils-devel \
-                   zlib-devel doxygen perl-Test-Harness
+RUN yum -y install cmake cmake3 readline-devel libyaml-devel binutils-devel \
+                   zlib-devel doxygen perl-Test-Harness openssl-devel
 RUN yum -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx
 RUN yum -y install luajit luajit-devel lua lua-devel
