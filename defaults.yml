@@ -1,0 +1,22 @@
+env:
+  ENABLED_BRANCHES: master 1.6 1.7
+build:
+  version:
+    - git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1/p' # VERSION
+    - git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\2/p' # RELEASE
+
+  tarball:
+    - git submodule update --init --recursive
+    - git describe --long --always > VERSION
+    - echo "VERSION" > ${TARGET_DIR}/files
+    - git ls-files >> ${TARGET_DIR}/files
+    - git submodule --quiet foreach 'git ls-files | sed "s|^|$path/|"' >> ${TARGET_DIR}/files
+    - |
+      tar \
+      --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
+      --exclude=FreeBSD --exclude=debian --exclude=rpm \
+      --transform="s,,${PRODUCT}-${VERSION}/,S" \
+      --owner=root --group=root \
+      -T ${TARGET_DIR}/files --show-transformed \
+      -czvf ${TARGET_DIR}/${PRODUCT}-${VERSION}.tar.gz
+    - rm -f ${TARGET_DIR}/files
