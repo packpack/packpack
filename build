@@ -84,21 +84,27 @@ ifneq ($(strip $(shell which gtar)), )
 	TAR=gtar
 endif
 
-# Create tarball in buildroot
-# --exclude-vcs-ignores is broken
-$(BUILDROOT)/$(TARBALL):
+$(BUILDROOT)/files:
 	@mkdir -p $(dir $@)
+	git submodule update --init --recursive
+	git describe --long --always > VERSION
+	echo "VERSION" > $@
+	git ls-files >> $@
+	git submodule --quiet foreach 'git ls-files | sed "s|^|$$path/|"' >> $@
+
+# Create tarball in buildroot
+$(BUILDROOT)/$(TARBALL): $(BUILDROOT)/files
 	@echo "-------------------------------------------------------------------"
 	@echo "Creating source tarball"
 	@echo "-------------------------------------------------------------------"
 	$(TAR) \
-		--exclude-vcs \
-		--exclude-backups \
-		--exclude='$(SCRIPTDIR)' --exclude='./build' \
+		--exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
 		$(TARBALL_EXTRA_ARGS) \
 		--exclude=FreeBSD --exclude=debian --exclude=rpm \
-		--transform='s,^\.,$(NAME),S' \
-		-czvf $@ . ./VERSION $(TARBALL_EXTRA_FILES)
+		--transform="s,,$(NAME)/,S" \
+		--owner=root --group=root \
+		-T $< --show-transformed \
+		-czvf $@ $(TARBALL_EXTRA_FILES)
 
 # Copy tarball to buildroot/$OS-$DIST chroot
 $(BUILDROOT)/%/$(TARBALL): $(BUILDROOT)/$(TARBALL)
