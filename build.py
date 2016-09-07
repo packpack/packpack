@@ -5,7 +5,12 @@ import sys
 import subprocess
 import shutil
 import argparse
-from urllib.parse import urlparse
+
+try:
+    from urlparse import urlparse
+except:
+    from urllib.parse import urlparse
+
 import yaml
 import logging
 
@@ -64,8 +69,7 @@ class Build():
             if not getattr(self.env, 'PRODUCT'):
                 self.env.PRODUCT = TRAVIS_REPO_NAME
             self.env.BRANCH = self.env.TRAVIS_BRANCH
-            if not self.env.BRANCH in { branch: True for branch in
-                                       self.env.ENABLED_BRANCHES.split() }:
+            if not self.env.BRANCH in self.env.ENABLED_BRANCHES.split():
                 self.log.warn("Build skipped - the branch %s is not for packaging",
                               self.env.BRANCHE)
                 sys.exit(0)
@@ -169,7 +173,7 @@ class Build():
                                         cwd = self.env.TARGET_DIR).strip()
 
     def make(self, args):
-        cmd = ['/usr/bin/env', '-i',
+        cmd = ['/usr/bin/env',
                'PRODUCT=' + self.env.PRODUCT,
                'NAME=' + self.env.NAME,
                'TARBALL=' + self.env.TARBALL,
