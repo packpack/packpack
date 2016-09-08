@@ -26,6 +26,8 @@ RUN yum -y install cmake cmake28 cmake3 readline-devel libyaml-devel binutils-de
                    zlib-devel doxygen perl-Test-Harness openssl-devel
 RUN yum -y install python-pip python-devel python-daemon python-yaml \
                    python-msgpack python-gevent python-six python-sphinx
+RUN pip install argparse
+
 # Install gevent-1.0.1
 ADD python-gevent-1.0.1-1.x86_64.rpm /tmp/
 RUN yum -y install /tmp/python-gevent-1.0.1-1.x86_64.rpm
