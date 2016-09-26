@@ -12,11 +12,20 @@ build:
     - git ls-files >> ${TARGET_DIR}/files
     - git submodule --quiet foreach 'git ls-files | sed "s|^|$path/|"' >> ${TARGET_DIR}/files
     - |
-      tar \
-      --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
-      --exclude=FreeBSD --exclude=debian --exclude=rpm \
-      --transform="s,,${PRODUCT}-${VERSION}/,S" \
-      --owner=root --group=root \
-      -T ${TARGET_DIR}/files --show-transformed \
-      -czvf ${TARGET_DIR}/${PRODUCT}-${VERSION}.tar.gz
+      if [ "$(uname)" == "Darwin" ]; then \
+          tar \
+          --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
+          --exclude=FreeBSD --exclude=debian --exclude=rpm \
+          -s ",^,${PRODUCT}-${VERSION}/," \
+          -T ${TARGET_DIR}/files \
+          -czvf ${TARGET_DIR}/${PRODUCT}-${VERSION}.tar.gz; \
+      else \
+          tar \
+          --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
+          --exclude=FreeBSD --exclude=debian --exclude=rpm \
+          --transform="s,,${PRODUCT}-${VERSION}/,S" \
+          --owner=root --group=root \
+          -T ${TARGET_DIR}/files --show-transformed \
+          -czvf ${TARGET_DIR}/${PRODUCT}-${VERSION}.tar.gz;
+      fi
     - rm -f ${TARGET_DIR}/files
