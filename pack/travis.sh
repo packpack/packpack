@@ -63,6 +63,11 @@ fi
 # Save git describe result to VERSION file
 echo ${VERSION} > VERSION
 
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    echo "Increase the maximum number of open file descriptors on macOS"
+    sudo launchctl limit maxfiles 1000000 1000000
+fi
+
 if [ "$PACK" == "none" ]; then
     echo 'Test mode'
     if [ -f test.sh ]; then
