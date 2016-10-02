@@ -121,6 +121,15 @@ env:
       fi; \
       echo ${REPO_USER}/$(echo ${REPO_NAME} | sed -e "s/\./_/")
 
+  #
+  # Options for GNU Make
+  #
+  # Use this variable if you want to use parallel make. For example,
+  # if you have a dual-processor system, set this variable to "-j2" or "-j3"
+  # for enhanced build performance.
+  #
+  MAKEOPTS: "-j"
+
 build:
   tarball:
     - git submodule update --init --recursive
@@ -146,3 +155,53 @@ build:
           -czvf ${BUILD_DIR}/${PRODUCT}-${VERSION}.tar.gz;
       fi
     - rm -f ${BUILD_DIR}/files
+
+  build:
+    - cp -p ${SCRIPT_DIR}/pack/${PACK}.mk ${BUILD_DIR}/Makefile
+    - |
+      case "${PACK}" in \
+        deb) \
+            cp -pR "${SOURCE_DIR}/debian/" "${BUILD_DIR}/debian/" ;; \
+        rpm) \
+            cp -p "${SOURCE_DIR}/rpm/${PRODUCT}.spec" "${BUILD_DIR}/" ;; \
+        *) ;; \
+      esac
+    - |
+      # TODO: remove NAME= variable from Makefiles \
+      if [ -z "${DOCKER_REPO}" ]; then \
+        # Run old-school GNU Make in the clean environment \
+        /usr/bin/env - \
+            PRODUCT="${PRODUCT}" \
+            NAME="${PRODUCT}-${VERSION}" \
+            TARBALL="${TARBALL}" \
+            VERSION="${VERSION}" \
+            RELEASE="${RELEASE}" \
+            MAKEOPTS="${MAKEOPTS}" \
+            make -C "${BUILD_DIR}"; \
+      fi
+    - |
+      if [ -n "${DOCKER_REPO}" ]; then
+        echo "#!/bin/sh\n"\
+            "useradd -u $(id -u) build\n"\
+            "usermod -a -G wheel build || echo\n"\
+            "usermod -a -G adm build || echo\n"\
+            "usermod -a -G sudo build\n"\
+            "su build -c \$@\n"\
+            > ${BUILD_DIR}/userwrapper.sh; \
+        chmod a+x ${BUILD_DIR}/userwrapper.sh; \
+        docker run \
+            --volume "${BUILD_DIR}:/build" \
+            --volume "${HOME}/.cache:/ccache" \
+            -e CCACHE_DIR=/ccache \
+            -e PRODUCT="${PRODUCT}" \
+            -e NAME="${PRODUCT}-${VERSION}" \
+            -e TARBALL="${TARBALL}" \
+            -e VERSION="${VERSION}" \
+            -e RELEASE="${RELEASE}" \
+            -e MAKEOPTS="${MAKEOPTS}" \
+            --workdir /build \
+            --rm=true \
+            --entrypoint=/build/userwrapper.sh \
+            ${DOCKER_REPO}:${DOCKER_TAG} \
+            make; \
+      fi

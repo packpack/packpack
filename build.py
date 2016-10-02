@@ -112,7 +112,7 @@ class Build():
         if pipe:
             return results
 
-    def prepare(self):
+    def info(self):
         self.log.info("%s", "-" * 80)
         self.log.info("Product:          %s", self.env.PRODUCT)
         self.log.info("Version:          %s", self.env.VERSION)
@@ -135,74 +135,23 @@ class Build():
         self.log.info("%s", "-" * 80)
 
     def command_tarball(self, args):
-        self.log.info("## TARBALL")
-        shutil.rmtree(self.env.BUILD_DIR, ignore_errors = True)
-        os.makedirs(self.env.BUILD_DIR)
+        self.log.info("## Tarball")
         self.execute_all(self.config.get('tarball', []),
                          cwd = self.env.SOURCE_DIR)
         self.env.TARBALL = self.execute("echo *.tar*", pipe = True,
                                         cwd = self.env.BUILD_DIR).strip()
 
-    def make(self, args):
-        # TODO: remove NAME= variable
-        cmd = ['/usr/bin/env',
-               'PRODUCT=' + self.env.PRODUCT,
-               'NAME=' + self.env.PRODUCT + "-" + self.env.VERSION,
-               'TARBALL=' + self.env.TARBALL,
-               'VERSION=' + self.env.VERSION,
-               'RELEASE=' + self.env.RELEASE,
-               'make'
-               ]
-        self.execute(cmd, cwd=self.env.BUILD_DIR)
-
-    def docker_make(self, args):
-        wrapper = os.path.join(self.env.BUILD_DIR, 'userwrapper.sh')
-        with open(wrapper, 'w') as f:
-            f.write("#!/bin/sh" "\n"
-                    "useradd -u " + str(os.getuid()) + " build" "\n"
-                    "usermod -a -G wheel build" "\n"
-                    "usermod -a -G adm build" "\n"
-                    "usermod -a -G sudo build" "\n"
-                    "su build -c $@" "\n")
-        os.chmod(wrapper, 777)
-        # TODO: remove NAME= variable
-        cmd = [ 'docker', 'run',
-               '--volume', '"' + self.env.BUILD_DIR + ':/build"',
-               '--volume', '"' + os.path.join(self.env.HOME, '.cache') + ':/ccache"',
-               '-e', 'CCACHE_DIR=/ccache',
-               '-e', 'PRODUCT=' + self.env.PRODUCT,
-               '-e', 'NAME=' + self.env.PRODUCT + "-" + self.env.VERSION,
-               '-e', 'TARBALL=' + self.env.TARBALL,
-               '-e', 'VERSION=' + self.env.VERSION,
-               '-e', 'RELEASE=' + self.env.RELEASE,
-               '--workdir', '/build',
-               '--rm=true',
-               '--entrypoint=/build/userwrapper.sh',
-               self.env.DOCKER_REPO + ":" + self.env.DOCKER_TAG,
-               "make"
-               ]
-        self.execute(cmd, cwd="/tmp")
-
     def command_build(self, args):
         self.command_tarball(args)
         self.log.info("## Build")
+        self.execute_all(self.config.get('build', []),
+                         cwd = self.env.SOURCE_DIR)
 
-        if self.env.OS in ("debian", "ubuntu"):
-            shutil.copy(os.path.join(self.env.SCRIPT_DIR, "pack", "deb.mk"),
-                        os.path.join(self.env.BUILD_DIR, "Makefile"))
-            shutil.copytree(os.path.join(self.env.SOURCE_DIR, "debian/"),
-                            os.path.join(self.env.BUILD_DIR, "debian/"))
-        elif self.env.OS in ("el", "ol", "fedora", "scientific"):
-            shutil.copy(os.path.join(self.env.SCRIPT_DIR, "pack", "rpm.mk"),
-                        os.path.join(self.env.BUILD_DIR, "Makefile"))
-            rpm_spec = self.env.PRODUCT + ".spec"
-            shutil.copy(os.path.join(self.env.SOURCE_DIR, "rpm", rpm_spec),
-                        os.path.join(self.env.BUILD_DIR, rpm_spec))
-
-        if getattr(self.env, "DOCKER_REPO", ''):
-            self.docker_make(args)
-        else:
-            self.make(args)
+    def run(self, args):
+        shutil.rmtree(self.env.BUILD_DIR, ignore_errors = True)
+        os.makedirs(self.env.BUILD_DIR)
+        method = getattr(build, 'command_' + args.command);
+        method(args);
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build');
@@ -230,6 +179,5 @@ if __name__ == '__main__':
     # Legacy
     if args.without_docker:
         delattr(build.args, 'DOCKER_REPO')
-    build.prepare()
-    method = getattr(build, 'command_' + args.command);
-    method(args);
+    build.info()
+    build.run(args)
