@@ -5,11 +5,7 @@ import sys
 import subprocess
 import shutil
 import argparse
-
-try:
-    from urlparse import urlparse
-except:
-    from urllib.parse import urlparse
+from collections import OrderedDict
 
 import yaml
 import logging
@@ -19,11 +15,26 @@ class Build():
     env = Env()
 
     def __init__(self):
+        #
+        # Create environment
+        #
         self.env.__dict__ = os.environ.copy()
         script_path = os.path.realpath(__file__)
-        self.env.BUILD_DIR = os.path.abspath(os.path.dirname(script_path))
-        self.env.SOURCE_DIR = os.path.abspath(os.path.join(self.env.BUILD_DIR, ".."))
+        self.env.SCRIPT_DIR = os.path.abspath(os.path.dirname(script_path))
+        self.env.SOURCE_DIR = os.path.abspath(os.path.join(self.env.SCRIPT_DIR, ".."))
 
+        # Configure yaml to preserve order
+        _mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
+        def dict_representer(dumper, data):
+            return dumper.represent_dict(data.iteritems())
+        def dict_constructor(loader, node):
+            return OrderedDict(loader.construct_pairs(node))
+        yaml.add_representer(OrderedDict, dict_representer)
+        yaml.add_constructor(_mapping_tag, dict_constructor)
+
+        #
+        # Setup logging
+        #
         self.log = logging.getLogger('build')
         self.log.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s %(levelname)-5s: %(message)s')
@@ -36,12 +47,15 @@ class Build():
         file_handler.setLevel(logging.DEBUG)
         self.log.addHandler(file_handler)
 
-        self.log.info("## INIT")
+        self.log.info("## Tarantool/Build")
 
+        #
+        # Read configuration files
+        #
         self.config = {}
         config_paths = [
             os.path.join(self.env.SOURCE_DIR, ".build.yml"),
-            os.path.join(self.env.BUILD_DIR, "defaults.yml")
+            os.path.join(self.env.SCRIPT_DIR, "defaults.yml")
         ]
         for config_path in config_paths:
             if not os.path.exists(config_path):
@@ -53,63 +67,21 @@ class Build():
                 if not k in self.config:
                     self.config[k] = v
             for k, v in root.get('env', {}).items():
-                if not hasattr(self.env, k):
-                    setattr(self.env, k, v)
-
-        if not getattr(self.env, 'OS', '') or not getattr(self.env, 'DIST', ''):
-            self.env.OS = 'ubuntu'
-            self.env.DIST = 'xenial'
-        elif self.env.OS == 'centos':
-            self.env.OS = 'el' # compatibility
-
-        if getattr(self.env, "TRAVIS_REPO_SLUG", ''):
-            self.log.info("Travis CI detected")
-            (TRAVIS_REPO_USER, TRAVIS_REPO_NAME) = \
-                self.env.TRAVIS_REPO_SLUG.split("/")
-            if not getattr(self.env, 'PRODUCT'):
-                self.env.PRODUCT = TRAVIS_REPO_NAME
-            self.env.BRANCH = self.env.TRAVIS_BRANCH
-            if not self.env.BRANCH in self.env.ENABLED_BRANCHES.split():
-                self.log.warn("Build skipped - the branch %s is not for packaging",
-                              self.env.BRANCHE)
-                sys.exit(0)
-            if not getattr(self.env, 'PACKAGECLOUD_REPO', ''):
-                self.env.PACKAGECLOUD_REPO = self.env.TRAVIS_REPO_USER +"/" + \
-                    self.env.BRANCH.replace(".", "_")
-
-                if TRAVIS_REPO_USER == "tarantool" and \
-                   self.env.BRANCH == "master":
-                    # TODO: upload all master branches from tarantool/X repos to tarantool/1_6
-                    self.env.PACKAGECLOUD_REPO = "tarantool/1_6"
-        else:
-            self.log.info("Local build")
-            if not hasattr(self.env, 'PRODUCT'):
-                origin = str(self.execute("git config --get remote.origin.url",
-                                          cwd = self.env.SOURCE_DIR,
-                                          pipe = True)).strip()
-                self.env.PRODUCT = os.path.splitext(os.path.basename(origin))[0]
-            self.env.BRANCH = self.execute("git rev-parse --abbrev-ref HEAD",
-                                           cwd = self.env.SOURCE_DIR,
-                                           pipe = True).strip()
-            if not hasattr(self.env, 'PACKAGECLOUD_REPO'):
-                self.env.PACKAGECLOUD_REPO = self.env.USER + "/" + \
-                    self.env.BRANCH.replace(".", "_")
-
-        if self.env.DIST.isdigit():
-            self.env.OSDIST= self.env.OS + self.env.DIST
-        else:
-            self.env.OSDIST= self.env.OS + "-" + self.env.DIST
-
-        if not hasattr(self.env, 'DOCKER_REPO'):
-            origin = str(self.execute("git config --get remote.origin.url",
-                                    cwd = self.env.BUILD_DIR,
-                                    pipe = True)).strip()
-            self.env.DOCKER_REPO = urlparse(origin).path.lstrip('/').rstrip('.git')
-        self.env.DOCKER_TAG = self.env.DOCKER_REPO + ":" + self.env.OSDIST
-
-        if not hasattr(self.env, 'TARGET_DIR'):
-            self.env.TARGET_DIR = os.path.join(self.env.BUILD_DIR, "root",
-                                               self.env.OSDIST)
+                # Already set, ignore
+                if hasattr(self.env, k):
+                    # Variable is already set, ignore
+                    continue
+                if type(v) is list:
+                    # Execute command to get variable value
+                    v = self.execute_all(v, cwd = self.env.SOURCE_DIR,
+                                         pipe = True)[-1].strip()
+                elif type(v) is int:
+                    # Convert value to string
+                    v = str(v)
+                elif type(v) is not str:
+                    self.log.error("Invalid env.%s entry", k)
+                    os.exit(-1)
+                setattr(self.env, k, v)
 
         self.log.debug("Configuration:\n---\n%s---",
                        yaml.dump({ "env": self.env.__dict__, "build": self.config},
@@ -141,50 +113,50 @@ class Build():
             return results
 
     def prepare(self):
-        self.log.info("## VERSION")
-        if not getattr(self.env, 'VERSION', '') or \
-           not getattr(self.env, 'RELEASE', ''):
-            (version, release) = self.execute_all(self.config.get('version', []),
-                                                  cwd = self.env.SOURCE_DIR,
-                                                  pipe = True)[-2:]
-            self.env.VERSION = version.strip()
-            self.env.RELEASE = release.strip()
-        self.env.NAME = self.env.PRODUCT + "-" + self.env.VERSION
         self.log.info("%s", "-" * 80)
         self.log.info("Product:          %s", self.env.PRODUCT)
         self.log.info("Version:          %s", self.env.VERSION)
         self.log.info("Release:          %s", self.env.RELEASE)
-        self.log.info("Target:           %s", self.env.OSDIST)
-        self.log.info("Docker Image:     %s", self.env.DOCKER_TAG)
-        if hasattr(self.env, 'PACKAGECLOUD_TOKEN'):
+        self.log.info("Target:           %s %s (%s)",
+                      self.env.OS, self.env.DIST, self.env.PACK)
+        if getattr(self.env, "DOCKER_REPO", ''):
+            self.log.info("Docker Repo:      %s", self.env.DOCKER_REPO)
+            self.log.info("Docker Image:     %s", self.env.DOCKER_TAG)
+        else:
+            self.log.info("Docker:           %s",
+                          "skipped - missing DOCKER_REPO")
+
+        if getattr(self.env, 'PACKAGECLOUD_TOKEN', ''):
             self.log.info("PackageCloud:     %s", self.env.PACKAGECLOUD_REPO)
         else:
             self.log.info("PackageCloud:     %s",
                           "skipped - missing PACKAGECLOUD_TOKEN")
+        self.log.info("Build Directory:  %s", self.env.BUILD_DIR)
         self.log.info("%s", "-" * 80)
 
     def command_tarball(self, args):
         self.log.info("## TARBALL")
-        shutil.rmtree(self.env.TARGET_DIR, ignore_errors = True)
-        os.makedirs(self.env.TARGET_DIR)
+        shutil.rmtree(self.env.BUILD_DIR, ignore_errors = True)
+        os.makedirs(self.env.BUILD_DIR)
         self.execute_all(self.config.get('tarball', []),
                          cwd = self.env.SOURCE_DIR)
         self.env.TARBALL = self.execute("echo *.tar*", pipe = True,
-                                        cwd = self.env.TARGET_DIR).strip()
+                                        cwd = self.env.BUILD_DIR).strip()
 
     def make(self, args):
+        # TODO: remove NAME= variable
         cmd = ['/usr/bin/env',
                'PRODUCT=' + self.env.PRODUCT,
-               'NAME=' + self.env.NAME,
+               'NAME=' + self.env.PRODUCT + "-" + self.env.VERSION,
                'TARBALL=' + self.env.TARBALL,
                'VERSION=' + self.env.VERSION,
                'RELEASE=' + self.env.RELEASE,
                'make'
                ]
-        self.execute(cmd, cwd=self.env.TARGET_DIR)
+        self.execute(cmd, cwd=self.env.BUILD_DIR)
 
     def docker_make(self, args):
-        wrapper = os.path.join(self.env.TARGET_DIR, 'userwrapper.sh')
+        wrapper = os.path.join(self.env.BUILD_DIR, 'userwrapper.sh')
         with open(wrapper, 'w') as f:
             f.write("#!/bin/sh" "\n"
                     "useradd -u " + str(os.getuid()) + " build" "\n"
@@ -193,19 +165,20 @@ class Build():
                     "usermod -a -G sudo build" "\n"
                     "su build -c $@" "\n")
         os.chmod(wrapper, 777)
+        # TODO: remove NAME= variable
         cmd = [ 'docker', 'run',
-               '--volume', '"' + self.env.TARGET_DIR + ':/build"',
+               '--volume', '"' + self.env.BUILD_DIR + ':/build"',
                '--volume', '"' + os.path.join(self.env.HOME, '.cache') + ':/ccache"',
                '-e', 'CCACHE_DIR=/ccache',
                '-e', 'PRODUCT=' + self.env.PRODUCT,
-               '-e', 'NAME=' + self.env.NAME,
+               '-e', 'NAME=' + self.env.PRODUCT + "-" + self.env.VERSION,
                '-e', 'TARBALL=' + self.env.TARBALL,
                '-e', 'VERSION=' + self.env.VERSION,
                '-e', 'RELEASE=' + self.env.RELEASE,
                '--workdir', '/build',
                '--rm=true',
                '--entrypoint=/build/userwrapper.sh',
-               self.env.DOCKER_TAG,
+               self.env.DOCKER_REPO + ":" + self.env.DOCKER_TAG,
                "make"
                ]
         self.execute(cmd, cwd="/tmp")
@@ -215,21 +188,21 @@ class Build():
         self.log.info("## Build")
 
         if self.env.OS in ("debian", "ubuntu"):
-            shutil.copy(os.path.join(self.env.BUILD_DIR, "pack", "deb.mk"),
-                        os.path.join(self.env.TARGET_DIR, "Makefile"))
+            shutil.copy(os.path.join(self.env.SCRIPT_DIR, "pack", "deb.mk"),
+                        os.path.join(self.env.BUILD_DIR, "Makefile"))
             shutil.copytree(os.path.join(self.env.SOURCE_DIR, "debian/"),
-                            os.path.join(self.env.TARGET_DIR, "debian/"))
+                            os.path.join(self.env.BUILD_DIR, "debian/"))
         elif self.env.OS in ("el", "ol", "fedora", "scientific"):
-            shutil.copy(os.path.join(self.env.BUILD_DIR, "pack", "rpm.mk"),
-                        os.path.join(self.env.TARGET_DIR, "Makefile"))
+            shutil.copy(os.path.join(self.env.SCRIPT_DIR, "pack", "rpm.mk"),
+                        os.path.join(self.env.BUILD_DIR, "Makefile"))
             rpm_spec = self.env.PRODUCT + ".spec"
             shutil.copy(os.path.join(self.env.SOURCE_DIR, "rpm", rpm_spec),
-                        os.path.join(self.env.TARGET_DIR, rpm_spec))
+                        os.path.join(self.env.BUILD_DIR, rpm_spec))
 
-        if args.without_docker:
-            self.make(args)
-        else:
+        if getattr(self.env, "DOCKER_REPO", ''):
             self.docker_make(args)
+        else:
+            self.make(args)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build');
@@ -254,6 +227,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     build = Build()
+    # Legacy
+    if args.without_docker:
+        delattr(build.args, 'DOCKER_REPO')
     build.prepare()
     method = getattr(build, 'command_' + args.command);
     method(args);

@@ -1,31 +1,148 @@
 env:
-  ENABLED_BRANCHES: master 1.6 1.7
-build:
-  version:
-    - git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1/p' # VERSION
-    - git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\2/p' # RELEASE
+  #
+  # The default build environment for tarantool/build.
+  #
+  # Any variable in this section can be overriden by .build.yml file at
+  # the root of your project source tree, by system environment variables
+  # or via command line options, in the described particular order.
+  #
+  # Variables processed one by one in the same order as they declared here.
+  # Scalar values converted to string and saved as is.
+  # For lists every line is executed as a shell command at the source dir of
+  # your project and then stdout of the last command is saved as a result.
+  # It is OK to use previously defined variables for further declarations.
+  # The build process fails if any command returns non-zero return code or
+  # prints some error message to stderr.
+  #
 
+  #
+  # Predefined variables:
+  #
+  # SOURCE_DIR: <root of your project source tree>
+  # SCRIPT_DIR: <root of tarantool/build project source tree>
+  #
+
+  #
+  # Target distribution, e.g OS=debian DIST=stretch or OS=fedora DIST=24
+  #
+  OS: ubuntu
+  DIST: xenial
+
+  #
+  # Package type, e.g. deb or rpm
+  #
+  PACK:
+   - |
+    case "${OS}" in \
+        debian|ubuntu) echo "deb";; \
+        centos|el|ol|fedora|scientific) echo "rpm";; \
+        *) echo "Unsupported OS=${OS}" >&2; exit 1;; \
+    esac
+
+  #
+  # The name of your software product.
+  #
+  # The name of git repository is used by defaylt, e.g.
+  # `rtsisyk/msgpuck` repository will be packed as `msgpuck`.
+  #
+  PRODUCT:
+    - basename $(git config --get remote.origin.url | sed 's/\(.*\)-/\1 /') .git
+
+  #
+  # Semantic version of the software, e.g. 2.4.35.
+  #
+  # Major and minor versions are extracted from the closest git tag.
+  # Patch level is the number of additional commits after this tag.
+  # For example, if `git describe` reports 1.0-3-g5c26e8b, then
+  # major is 1, minor is 2 and patch level is 3. SHA1 is ignored.
+  #
+  # See git-describe(1) for detailed explanation of the tag search
+  # strategy and algorithm.
+  #
+  # Sic: please follow Semantic Versioning (http://semver.org),
+  # Debian policies and Fedora guidelines then planning your releases.
+  #
+  VERSION:
+    - git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p'
+
+  # The number of times this version of the software has been packaged.
+  # This feature is not implemented yet, therefore value is always set to 1.
+  #
+  # Sic: Both Debian policies and Fedora guidelines discourage 0 value.
+  #
+  RELEASE: 1
+
+  #
+  # Directory used for builds
+  #
+  BUILD_DIR:
+   - echo "${SCRIPT_DIR}/root/${PRODUCT}/${VERSION}-${RELEASE}/${OS}/${DIST}"
+
+  #
+  # Docker repository to use for the build.
+  #
+  # Empty value means Docker is not required for this build and
+  # all commands should be performed directly on the host system.
+  # This mode is useful for testing purposes or when tarantool/build is
+  # already started in the proper Docker container.
+  #
+  # Sic: `tarball' command is always performed on the host system
+  #
+  DOCKER_REPO: tarantool/build
+
+  #
+  # Docker tag used for build
+  #
+  DOCKER_TAG:
+    - |
+      if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then \
+          # Numeric dist, e.g. centos6 or fedora23 \
+          echo "${OS}${DIST}"; \
+      else \
+          # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc. \
+          echo "${OS}-${DIST}"; \
+      fi
+
+  #
+  # PackageCloud.io repository
+  #
+  PACKAGECLOUD_REPO:
+    - |
+      if [ -n "${TRAVIS_REPO_SLUG}" ]; then \
+          REPO_USER=$(echo $TRAVIS_REPO_SLUG | cut -d '/' -f 1); \
+          REPO_NAME="${TRAVIS_BRANCH}"
+      else \
+        REPO_USER="${PRODUCT}" \
+        REPO_NAME="${PRODUCT}" \
+        BRANCH=$(git rev-parse --abbrev-ref HEAD); \
+        if [ "${BRANCH}" != "HEAD" ]; then \
+            REPO_NAME="${BRANCH}"
+        fi; \
+      fi; \
+      echo ${REPO_USER}/$(echo ${REPO_NAME} | sed -e "s/\./_/")
+
+build:
   tarball:
     - git submodule update --init --recursive
     - git describe --long --always > VERSION
-    - echo "VERSION" > ${TARGET_DIR}/files
-    - git ls-files >> ${TARGET_DIR}/files
-    - git submodule --quiet foreach 'git ls-files | sed "s|^|$path/|"' >> ${TARGET_DIR}/files
+    - echo "VERSION" > ${BUILD_DIR}/files
+    - git ls-files >> ${BUILD_DIR}/files
+    - git submodule --quiet foreach 'git ls-files | sed "s|^|$path/|"' >> ${BUILD_DIR}/files
     - |
       if [ "$(uname)" == "Darwin" ]; then \
           tar \
           --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
           --exclude=FreeBSD --exclude=debian --exclude=rpm \
           -s ",^,${PRODUCT}-${VERSION}/," \
-          -T ${TARGET_DIR}/files \
-          -czvf ${TARGET_DIR}/${PRODUCT}-${VERSION}.tar.gz; \
+          -T ${BUILD_DIR}/files \
+          -czvf ${BUILD_DIR}/${PRODUCT}-${VERSION}.tar.gz; \
       else \
           tar \
           --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
           --exclude=FreeBSD --exclude=debian --exclude=rpm \
           --transform="s,,${PRODUCT}-${VERSION}/,S" \
           --owner=root --group=root \
-          -T ${TARGET_DIR}/files --show-transformed \
-          -czvf ${TARGET_DIR}/${PRODUCT}-${VERSION}.tar.gz;
+          -T ${BUILD_DIR}/files --show-transformed \
+          -czvf ${BUILD_DIR}/${PRODUCT}-${VERSION}.tar.gz;
       fi
-    - rm -f ${TARGET_DIR}/files
+    - rm -f ${BUILD_DIR}/files
