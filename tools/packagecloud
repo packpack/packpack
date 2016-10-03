@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+import os
+import sys
+import requests
+import argparse
+
+class PackageCloud():
+    API_URL = "https://packagecloud.io"
+
+    def __init__(self, token):
+        self.token = token
+
+    def apiget(self, path, params=None):
+        url = self.API_URL + path
+        r = requests.get(url, auth=(self.token, ''), params = params)
+        r.raise_for_status()
+        return r.json()
+
+    def apipost(self, path, data=None, params=None, files=None):
+        url = self.API_URL + path
+        r = requests.post(url, auth=(self.token, ''), data=data,
+                          params=params, files=files)
+        r.raise_for_status()
+        return r.json()
+
+    def apidelete(self, path, params=None):
+        url = self.API_URL + path
+        r = requests.delete(url, auth=(self.token, ''), params=params)
+        r.raise_for_status()
+
+    def push(self, repo, kind, osname, distname, files, ignore_duplicates):
+        # Find distro id
+        distributions = self.apiget("/api/v1/distributions.json")
+        distros = distributions.get(kind, None)
+        if distros is None:
+            raise ValueError('Unsupported kind ' + kind)
+        distro_version_id = None
+        for distro in distros:
+            if distro['index_name'] == osname:
+                for version in distro['versions']:
+                    if version['index_name'] == distname:
+                        distro_version_id = version['id']
+                        break
+                break
+        if distro_version_id is None:
+            raise ValueError('Unsupported OS=' + osname + ' DIST=' + distname)
+        data = { "package[distro_version_id]": distro_version_id }
+
+        httpfiles = []
+        httpfileinfo = (os.path.basename(files[0]), open(files[0], 'rb'))
+        httpfiles.append(('package[package_file]', httpfileinfo))
+        if kind == 'dsc':
+            if os.path.splitext(httpfiles[0][1][0])[1] != '.dsc':
+                raise Exception("The first file must be .dsc package")
+            for f in files[1:]:
+                if os.path.splitext(f)[1] == '.dsc':
+                    raise Exception("Multiple dsc files found")
+                httpfileinfo = (os.path.basename(f), open(f, 'rb'))
+                httpfiles.append(('package[source_files][]', httpfileinfo))
+        elif len(files) > 1:
+                raise Exception("Can push only one package per time")
+
+        try:
+            self.apipost('/api/v1/repos/' + repo + '/packages.json',
+                         data=data, files=httpfiles)
+        except requests.exceptions.HTTPError as e:
+            if not ignore_duplicates or e.response.status_code != 422:
+                raise
+            print("Already pushed, skipping")
+
+    def prune(self, repo, kind=None, os=None, dist=None, keep=None):
+        url = "/api/v1/repos/" + repo + "/packages"
+        for k in (kind, os, dist):
+            if k is None:
+                break
+            url += '/' + k
+        url += '.json'
+        params = { "per_page": 100500 }
+        packages = self.apiget(url, params)
+        for package in packages:
+            if package['versions_count'] <= keep:
+                continue
+            versions = self.apiget(package['versions_url'], params)
+            versions = sorted(versions, key=lambda v: v['created_at'])
+            if keep >= 0:
+                versions = versions[-keep:]
+            for version in versions:
+                pkgpath = repo + '/' + version['distro_version'] + \
+                    '/' + version['filename']
+                print('prune', pkgpath)
+                self.apidelete('/api/v1/repos/' + pkgpath)
+
+
+if __name__ == '__main__':
+    # Initialize argument parser
+    parser = argparse.ArgumentParser(description='PackageCloud')
+    subparsers = parser.add_subparsers(help='available commands')
+
+    # Add 'push' command
+    push_parser = subparsers.add_parser('push',
+        help='push new package');
+    push_parser.set_defaults(method=PackageCloud.push);
+    push_parser.add_argument('repo',
+        help='Username and repository, e.g tarantool/1.6.')
+    push_parser.add_argument('kind',
+        help='The kind of package, e.g, "rpm" or "deb".')
+    push_parser.add_argument('osname', metavar='os',
+        help='The name of distribution, e.g. "fedora" or "debian".')
+    push_parser.add_argument('distname', metavar='dist',
+        help='The version name of distribution, e.g. "24" or "stretch".')
+    push_parser.add_argument('files', nargs='+',
+        help='Packages')
+    push_parser.add_argument('--ignore-duplicates',
+        default=False, action='store_true',
+        help='Ignore duplicated packages.')
+
+    # Add 'prune' command
+    prune_parser = subparsers.add_parser('prune',
+        help='prune old packages');
+    prune_parser.set_defaults(method=PackageCloud.prune);
+    prune_parser.add_argument('repo',
+        help='Username and repository, e.g tarantool/1.6.')
+    prune_parser.add_argument('kind',
+        help='The kind of package, e.g, "rpm" or "deb".')
+    prune_parser.add_argument('os', nargs='?',
+        help='The name of distribution, e.g. "fedora" or "debian".')
+    prune_parser.add_argument('dist', nargs='?',
+        help='The version name of distribution, e.g. "24" or "stretch".')
+    prune_parser.add_argument('--keep', type=int, default=2,
+        help='The number of package versions to keep.')
+
+    args = parser.parse_args()
+    if not 'method' in args:
+        parser.print_help()
+        sys.exit(1)
+    args = vars(args)
+    method = args.pop('method')
+    token = os.getenv('PACKAGECLOUD_TOKEN')
+    packagecloud = PackageCloud(token)
+    method(packagecloud, **args)
+    sys.exit(0)
