@@ -131,7 +131,11 @@ env:
   MAKEOPTS: "-j"
 
 build:
+  clean:
+    - rm -rf "${BUILD_DIR}"
+
   tarball:
+    - mkdir -p "${BUILD_DIR}"
     - git submodule update --init --recursive
     - git describe --long --always > VERSION
     - echo "VERSION" > ${BUILD_DIR}/files
@@ -168,6 +172,7 @@ build:
       esac
     - |
       # TODO: remove NAME= variable from Makefiles \
+      TARBALL=$(echo ${PRODUCT}*.tar*); \
       if [ -z "${DOCKER_REPO}" ]; then \
         # Run old-school GNU Make in the clean environment \
         /usr/bin/env - \
@@ -178,9 +183,7 @@ build:
             RELEASE="${RELEASE}" \
             MAKEOPTS="${MAKEOPTS}" \
             make -C "${BUILD_DIR}"; \
-      fi
-    - |
-      if [ -n "${DOCKER_REPO}" ]; then
+      else \
         echo "#!/bin/sh\n"\
             "useradd -u $(id -u) build\n"\
             "usermod -a -G wheel build || echo\n"\

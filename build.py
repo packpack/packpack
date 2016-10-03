@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+from __future__ import print_function
 import os
 import sys
 import subprocess
 import shutil
-import argparse
 from collections import OrderedDict
 
 import yaml
@@ -134,50 +134,44 @@ class Build():
         self.log.info("Build Directory:  %s", self.env.BUILD_DIR)
         self.log.info("%s", "-" * 80)
 
-    def command_tarball(self, args):
-        self.log.info("## Tarball")
-        self.execute_all(self.config.get('tarball', []),
-                         cwd = self.env.SOURCE_DIR)
-        self.env.TARBALL = self.execute("echo *.tar*", pipe = True,
-                                        cwd = self.env.BUILD_DIR).strip()
+    def run(self, command):
+        # TODO: move to yaml, implement proper dependency resolution
+        DEPS = {
+            "clean": ["clean"],
+            "tarball": ["clean", "tarball"],
+            "build": ["clean", "tarball", "build"],
+            "all": ["clean", "tarball", "build"],
+        }
 
-    def command_build(self, args):
-        self.command_tarball(args)
-        self.log.info("## Build")
-        self.execute_all(self.config.get('build', []),
-                         cwd = self.env.SOURCE_DIR)
+        deps = DEPS.get(command, [command])
+        for i, dep in enumerate(deps):
+            self.log.info("## %s", dep)
+            cwd = i < 3 and self.env.SOURCE_DIR or self.env.WORK_DIR
+            self.execute_all(self.config.get(dep, []), cwd = cwd)
+            self.log.info("## %s done", dep)
 
-    def run(self, args):
-        shutil.rmtree(self.env.BUILD_DIR, ignore_errors = True)
-        os.makedirs(self.env.BUILD_DIR)
-        method = getattr(build, 'command_' + args.command);
-        method(args);
+def usage():
+    print("Usage: ", sys.argv[0], "[command]")
+    print("")
+    print("Available commands:")
+    commands = [
+        ("clean",       "remove all produced files"),
+        ("tarball",     "pack source tarball"),
+        ("build",       "pack packages"),
+    ]
+    for (command, description) in commands:
+        print("    ", command.ljust(20), description)
+    print("")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Build');
-    subparsers = parser.add_subparsers(help='available commands')
-    parser.set_defaults(command='build', without_docker = False)
-
-    tarball_parser = subparsers.add_parser('tarball',
-        help='create source tarball');
-    tarball_parser.set_defaults(command='tarball');
-
-    build_parser = subparsers.add_parser('build',
-        help='create packages');
-    build_parser.set_defaults(command='build');
-    build_parser.add_argument("--without-docker",
-        help="don't use docker for build",
-        action='store_true',
-        default=False)
-
-    args = parser.parse_args()
-    if not 'command' in args:
-        parser.print_help()
+    if len(sys.argv) == 1:
+        command = 'all'
+    elif len(sys.argv) == 2 and sys.argv[1] not in ("-h", "--help"):
+        command = sys.argv[1]
+    else:
+        usage()
         sys.exit(1)
 
     build = Build()
-    # Legacy
-    if args.without_docker:
-        delattr(build.args, 'DOCKER_REPO')
     build.info()
-    build.run(args)
+    build.run(command)
