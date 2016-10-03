@@ -4,11 +4,9 @@ from __future__ import print_function
 import os
 import sys
 import subprocess
-import shutil
-from collections import OrderedDict
-
 import yaml
 import logging
+from collections import OrderedDict
 
 class Build():
     class Env: pass
