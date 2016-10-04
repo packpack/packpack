@@ -161,7 +161,7 @@ build:
     - rm -f ${BUILD_DIR}/files
 
   build:
-    - cp -p ${SCRIPT_DIR}/pack/${PACK}.mk ${BUILD_DIR}/Makefile
+    - cp -p ${SCRIPT_DIR}/tools/${PACK}.mk ${BUILD_DIR}/Makefile
     - |
       case "${PACK}" in \
         deb) \
