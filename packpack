@@ -45,7 +45,7 @@ class Build():
         file_handler.setLevel(logging.DEBUG)
         self.log.addHandler(file_handler)
 
-        self.log.info("## Tarantool/Build")
+        self.log.info("## PackPack")
 
         #
         # Read configuration files

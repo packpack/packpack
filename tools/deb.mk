@@ -17,7 +17,7 @@ ifndef DEBEMAIL
 DEBEMAIL="build@tarantool.org"
 endif
 ifndef DEBFULLNAME
-DEBFULLNAME="Tarantool Buildbot"
+DEBFULLNAME="PackPack Cloud Infrastructure"
 endif
 
 # https://wiki.debian.org/IntroDebianPackaging:
