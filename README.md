@@ -1,30 +1,55 @@
-# Cloud Build Infrastructure
+# PackPack
 
-Build DEB and RPM packages for your project using Docker (on Travis CI)
-and export results to [PackageCloud].
+**PackPack** is a comprehensive ready-to-use solution to build and publish
+RPM and Debian packages in the cloud.
 
-Just a minute from the push to packages!
+[<img src="/doc/logo.png" align="right" width="120px" height="120px" />][PackPack]
 
-## Prerequisites
+* Push your code to [GitHub]
 
-- Docker, GNU `make` and `bash` (or just use Travis CI)
-- [RPM] spec should be placed to `rpm/${myreponame}.spec` and
-  [Debian] rules to `debian/`, respectively:
-- For Mac OS X (macOS) support install 'gnu-tar', 'coreutils' and 'md5sha1sum'
-  packages with homebrew and Docker (dmg package from site)
+* Build packages using [Travis CI]
 
-## Sanity checks
+* Host repositories on [PackageCloud] or Amazon S3<sup id="a1">[1](#f1)</sup>
+
+**PackPack** is the missing glue between [GitHub], [Travis CI] and
+[PackageCloud].
+
+Cloud-hosted and absolutely free of charge.
+Just a minute from the push to the end user.
+
+## Supported Distros
+
+* Debian Wheezy / Jessie / Stretch / Sid
+* Ubuntu Precise / Trusty / Xenial / Yakkety
+* Fedora 23 / 24 / Rawhide
+* CentOS 6 / 7
+
+Please feel free to file an [issue][Issues] if you want more distros.
+
+## Quick Start
+
+- Put RPM spec to `rpm/<myreponame>.spec` and Debian rules to `debian/`
+  folder.
+
+- Tag the git repository with he `major.minor` annotated git tag.
+  PackPack will automatically set `patch` level based on the commit number
+  from this tag in order to provide `major.minor.patch` sematic versioning.
+
 ```sh
-$ cd mypproject/
-myproject$ [ -f rpm/myproject.spec  ] && echo "RPM spec exists"
-RPM spec exists
-myproject$ [ -f debian/rules ] && echo "Debian rules exists"
-Debian rules exists
+$ git tag -a 1.0
+$ git describe --always --long
+1.0-0-g5c26e8b # major.minor-patch
 ```
 
-## Usage on Travis
+- Register an account on [PackageCloud] and create a repo.
 
-Add to `.travis.yml`:
+- Add your [GitHub] project to [Travis CI].
+
+- Add `PACKAGECLOUD_TOKEN=<token>` (secret) and
+  `PACKAGECLOUD_REPO=<username>/<reponame>` environment variables
+  [to your project settings on Travis CI][Travis CI Environment].
+
+- Enable PackPack magic. Here is our `.travis.yml` file:
 
 ```yaml
 sudo: required
@@ -37,46 +62,98 @@ env:
     matrix:
       - OS=centos DIST=6 PACK=rpm
       - OS=centos DIST=7 PACK=rpm
-      - OS=fedora DIST=22 PACK=rpm
       - OS=fedora DIST=23 PACK=rpm
       - OS=fedora DIST=24 PACK=rpm
-      - OS=fedora DIST=rawhide PACK=rpm
       - OS=ubuntu DIST=trusty PACK=deb
       - OS=ubuntu DIST=precise PACK=deb
-      - OS=ubuntu DIST=wily PACK=deb
       - OS=ubuntu DIST=xenial PACK=deb
       - OS=ubuntu DIST=yakkety PACK=deb
       - OS=debian DIST=jessie PACK=deb
       - OS=debian DIST=wheezy PACK=deb
       - OS=debian DIST=stretch PACK=deb
-      - OS=debian DIST=sid PACK=deb
-      - PACK=none
 
 script:
-  - git clone https://github.com/tarantool/build.git
-  - ./build/pack/travis.sh
-
-notifications:
-  email: true
-  irc: false
-
+  - git clone https://github.com/packpack/packpack.git
+  - ./packpack/packpack
 ```
 
-Enable [Travis integration] and [Packagecloud integration] and then push
-changes to [GitHub].
+- Push the update to GitHub repo to trigger Travis CI.
 
-N.B. Now we build packages only for master branch (or for stuff hardcoded in
-`build/travis/travis.sh`)
+- Check Travis logs and fix the build problems if any.
 
-### Available ENV variables:
+- Get packages on your [PackageCloud] repo.
+
+- (Optional) Star us on GitHub.
+
+That's it.
+
+## Local Usage
+
+**PackPack** can be used locally without Travis CI to troubleshoot
+problems with builds.
+
+Install the following dependencies:
+
+- bash
+- tar
+- Docker
+- Python 2.6+ or Python 3+
+
+Clone this repository:
+
+    myproject$ git clone https://github.com/packpack/packpack.git packpack
+
+Try to build some packages, say RPM packages for Fedora 24:
+
+    myproject$ OS=fedora DIST=24 ./packpack/packpack
+
+For the first time PackPack will download Docker images, please wait
+for a while.
+
+Generated RPM packages will be stored to
+`packpack/root/${PRODUCT}/${VERSION}-${RELEASE}/$OS/$DIST/results/`
+folder:
+
+    myproject$ ls -1s build/root/myproject/1.0.2-0/fedora/24/results/
+    total 112
+    76 myproject-1.0.2-0.fc24.src.rpm
+    36 myproject-devel-1.0.2-0.fc24.x86_64.rpm
+
+## Environment variables
+
+PackPack can be tuned using environment variables.
 
 * `OS` - target operating system (like `fedora` or `ubuntu`)
 * `DIST` - os distribution name or tag (like `21` or `precise`)
 * `PACK` - packager type [deb/rpm/none].
+* `PRODUCT` - project name used for source tarball and source package.
+* `VERSION` - a package version to use, e.g. 1.0.0 (defaults to git tag name)
+* `RELEASE` - a package release number, e.g. -155 (defaults to the commit
+   number from the last tag, see `git describe --long`)
 * `PACKAGECLOUD_TOKEN` - a token for http://packagecloud.io/
 * `PACKAGECLOUD_REPO` - package cloud repository name (default is ```${username}/${branch}```)
 
-### Tests
+Please see [config.yml][config.yml] for detailed guide.
+
+## Overriding Rules
+
+To override some Packpack rules create a file named `.packpack.yml`
+at the root directory of your git repository. PackPack will try to load
+this and override system-wide rules in [config.yml][config.yml].
+
+For example, to override version generator, create a `.packpack.yml` file
+with the following content.
+
+```
+env:
+  VERSION:
+    - git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
+  RELEASE=1
+```
+
+Please see [config.yml][config.yml] for examples.
+
+### Custom Rules
 
 If `PACK` is equal `none` - Travis run `test.sh` from project root
 (if file exists)
@@ -88,97 +165,24 @@ https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
 
 Example: https://github.com/tarantool/tarantool/blob/1.6/.travis.yml
 
-## Local Usage
-
-Clone this repository:
-
-    myproject$ git clone https://github.com/tarantool/build.git build
-
-Try to build some packages, say RPM packages for Fedora Rawhide:
-
-    myproject$ ./build/build PRODUCT=tarantool fedora-rawhide
-
-Please wait a while for the first time until Docker downloads images from
-Docker Hub. It is possible to get into the cache all supported distros
-using `./build/build download` command.
-
-Generated RPM packages will be stored to `build/root/$OS-$PACK-$DIST/results/`
-folder:
-
-    myproject$ ls -1s build/root/rpm-fedora-rawhide/results/
-    total 112
-    76 myproject-1.0.2-0.fc24.src.rpm
-    36 myproject-devel-1.0.2-0.fc24.x86_64.rpm
-
-### Targets
-
-* `./build/build` without arguments starts packaging for all supported distros
-* `./build/build clean` - clean buildroot (./build/root/)
-* `./build/build download` - download images from Docker Hub
-* `./build/build tarball`
-* `./build/build ${OS}-${DIST}` - build packages for ${OS}-${DIST}, e.g.
-  debian-sid, fedora23 or centos7
-* `./build/build all` - build all packages
-
-### Available ENV variables
-
-* `PRODUCT` - project name used for source tarball and source package.
-* `VERSION` - a package version to use, e.g. 1.0.0 (defaults to git tag name)
-* `RELEASE` - a package release number, e.g. -155 (defaults to the commit
-   number from the last tag, see `git describe --long`)
-* `TARBALL` - tarball name (default is `${PRODUCT}-${VERSION}.tar.gz`)
-* `DEB_VERSION` - override the version only for DEB packages
-* `DEB_RELEASE` - override the release only for DEB packages
-* `RPM_VERSION` - override the version only for RPM packages
-* `RPM_RELEASE` - override the release only for RPM packages
-* `RPM_SPEC` - a relative path to RPM spec file (default is
-   `rpm/${PRODUCT}.spec`)
-
-## Parallelism
-
-`./build/build` is a regular `Makefile`, so it fully supports [parallel
-execution] provided by GNU `make`. The command below executes packaging for
-`xenial` and `willy` at once:
-
-    ./build/build PRODUCT=tarantool ubuntu-xenial ubuntu-willy -j2
-
-It is also possible to build packages for supported distors in parallel:
-
-    ./build/build PRODUCT=tarantool -j
-
-Please refer to GNU `make` [documentation](parallel execution) for additional
-information.
-
-[parallel execution]: https://www.gnu.org/software/make/manual/html_node/Parallel.html
-
-`dpkg-buildpackage` and `rpmbuild` themself also utilize multiple cores
-inside of Docker containers. Please control the number of cores used by
-the host `make` carefully.
-
-### Customizing
-
-To override some `make` variables create a file named `.build.mk` in the root
-of your repository. `./build/build` tries to include this file
-before executing any rules. An example of `.build.mk`:
-
-```
-# Override version
-VERSION=$(shell cat VERSION | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
-RELEASE=1
-```
-
-It is also possible to override variables for specific product by placing
-the same file to `./product.d/$(PRODUCT)` in this repository.
-
 See Also
 --------
 
 * [Tarantool](http://github.com/tarantool/tarantool)
 * Tarantool Repositories on [PackageCloud](https://packagecloud.io/tarantool/1_6)
 
+<b id="f1">1</b> Amazon S3 support is coming soon. [^](#a1)
+[PackPack]: https://github.com/packpack/packpack
+[GitHub]: https://github.com/
 [PackageCloud]: https://packagecloud.io/
+[Travis CI]: https://travis-ci.org/
+[Travis CI Environment]: https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings
+[Issues]: https://github.com/packpack/packpack/issues
 [RPM]: https://github.com/tarantool/modulekit/tree/master/rpm
 [Debian]: https://github.com/tarantool/modulekit/tree/master/debian
-[GitHub]: https://github.com/
 [Travis Integration]: https://docs.travis-ci.com/user/getting-started/
 [PackageCloud Integration]: https://packagecloud.io/docs#travis
+[luafun]: https://github.com/rtsisyk/luafun
+[luafun-logo]: https://gist.githubusercontent.com/rtsisyk/28436ebd7bec8cb1a441faf0cc588fb3/raw/7870cfc5d8174041f2abfe12778bb0466e39711e/luafun.png
+[tarantool-logo]: https://gist.githubusercontent.com/rtsisyk/28436ebd7bec8cb1a441faf0cc588fb3/raw/bac8cf73fb98ce892a5b3837627736ceaba37652/tarantool.png
+[config.yml]: https://github.com/packpack/packpack/blob/master/config.yml
