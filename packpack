@@ -135,13 +135,13 @@ class Build():
     def run(self, task):
         # TODO: move to yaml, implement proper dependency resolution
         DEPS = {
-           "all": ["clean", "tarball", "build"],
+           "all": ["clean", "tarball", "build", "upload"],
         }
 
         deps = DEPS.get(task, [task])
         for i, dep in enumerate(deps):
             self.log.info("## %s", dep)
-            cwd = i < 3 and self.env.SOURCE_DIR or self.env.WORK_DIR
+            cwd = i < 2 and self.env.SOURCE_DIR or self.env.BUILD_DIR
             self.execute_all(self.tasks.get(dep, []), cwd = cwd)
             self.log.info("## %s done", dep)
 

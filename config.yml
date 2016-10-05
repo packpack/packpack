@@ -208,3 +208,43 @@ tasks:
             ${DOCKER_REPO}:${DOCKER_TAG} \
             make; \
       fi
+  upload:
+    - echo "Exporting packages to packagecloud.io repo ${PACKAGECLOUD_REPO}"
+    - |
+      if [ -z "${PACKAGECLOUD_TOKEN}" ] || [ -z "${PACKAGECLOUD_REPO}" ]; then \
+        exit 0; \
+      fi; \
+      if [ "${OS}" = "centos" ]; then \
+        echo "PackageCloud doesn't support ${OS} ${DIST}"; \
+        echo "Using repository for RHEL"; \
+        OS=el; \
+      elif [ "${DIST}" = "rawhide" ] || [ "${DIST}" = "sid" ]; then \
+        echo "PackageCloud doesn't support ${OS} ${DIST}"; \
+        echo "Skipping..."; \
+        exit 0; \
+      fi; \
+      if [ "${PACK}" = "rpm" ]; then \
+        for rpm in ${BUILD_DIR}/results/*.rpm; do \
+            echo "Pushing $(basename ${rpm}) to ${PACKAGECLOUD_REPO}"
+            ${SCRIPT_DIR}/tools/packagecloud push ${PACKAGECLOUD_REPO} rpm ${OS} ${DIST} ${rpm} --ignore-duplicates; \
+        done; \
+        echo "Prune old packages"; \
+        ${SCRIPT_DIR}/tools/packagecloud prune ${PACKAGECLOUD_REPO} rpm ${OS} ${DIST}; \
+      elif [ "${PACK}" = "deb" ]; then \
+        for deb in ${BUILD_DIR}/results/*.deb; do \
+            echo "Pushing $(basename ${deb}) to ${PACKAGECLOUD_REPO}"
+            ${SCRIPT_DIR}/tools/packagecloud push ${PACKAGECLOUD_REPO} deb \
+                ${OS} ${DIST} ${deb} --ignore-duplicates; \
+        done; \
+        echo "Pushing a source package to ${PACKAGECLOUD_REPO}"; \
+        ${SCRIPT_DIR}/tools/packagecloud push ${PACKAGECLOUD_REPO} dsc \
+            ${OS} ${DIST} ${BUILD_DIR}/results/*.dsc \
+            ${BUILD_DIR}/results/*.debian.tar* \
+            ${BUILD_DIR}/results/*.orig.tar* \
+            --ignore-duplicates; \
+        echo "Prune old packages"; \
+        ${SCRIPT_DIR}/tools/packagecloud prune ${PACKAGECLOUD_REPO} deb \
+            ${OS} ${DIST}; \
+        echo "Prune old source packages"; \
+        ${SCRIPT_DIR}/tools/packagecloud prune ${PACKAGECLOUD_REPO} dsc; \
+      fi;
