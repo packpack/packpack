@@ -60,17 +60,17 @@ cache: ccache
 
 env:
     matrix:
-      - OS=centos DIST=6 PACK=rpm
-      - OS=centos DIST=7 PACK=rpm
-      - OS=fedora DIST=23 PACK=rpm
-      - OS=fedora DIST=24 PACK=rpm
-      - OS=ubuntu DIST=trusty PACK=deb
-      - OS=ubuntu DIST=precise PACK=deb
-      - OS=ubuntu DIST=xenial PACK=deb
-      - OS=ubuntu DIST=yakkety PACK=deb
-      - OS=debian DIST=jessie PACK=deb
-      - OS=debian DIST=wheezy PACK=deb
-      - OS=debian DIST=stretch PACK=deb
+      - OS=centos DIST=6
+      - OS=centos DIST=7
+      - OS=fedora DIST=23
+      - OS=fedora DIST=24
+      - OS=ubuntu DIST=trusty
+      - OS=ubuntu DIST=precise
+      - OS=ubuntu DIST=xenial
+      - OS=ubuntu DIST=yakkety
+      - OS=debian DIST=jessie
+      - OS=debian DIST=wheezy
+      - OS=debian DIST=stretch
 
 script:
   - git clone https://github.com/packpack/packpack.git
@@ -119,30 +119,33 @@ folder:
     76 myproject-1.0.2-0.fc24.src.rpm
     36 myproject-devel-1.0.2-0.fc24.x86_64.rpm
 
-## Environment variables
+## Configuration
 
-PackPack can be tuned using environment variables.
+**PackPack** settings can be overriden using environment variables.
+The most important options are:
 
-* `OS` - target operating system (like `fedora` or `ubuntu`)
-* `DIST` - os distribution name or tag (like `21` or `precise`)
-* `PACK` - packager type [deb/rpm/none].
-* `PRODUCT` - project name used for source tarball and source package.
-* `VERSION` - a package version to use, e.g. 1.0.0 (defaults to git tag name)
-* `RELEASE` - a package release number, e.g. -155 (defaults to the commit
-   number from the last tag, see `git describe --long`)
-* `PACKAGECLOUD_TOKEN` - a token for http://packagecloud.io/
-* `PACKAGECLOUD_REPO` - package cloud repository name (default is ```${username}/${branch}```)
+* `OS` - target operating system (e.g. `fedora` or `ubuntu`)
+* `DIST` - target distribution name or tag (e.g `24` or `precise`)
+* `PRODUCT` - the name of software product, used for source tarball and
+   source package (e.g. `tarantool`).
+* `PACKAGECLOUD_TOKEN` - a secure token for [PackageCloud]
+* `PACKAGECLOUD_REPO` - repository name for [PackageCloud]
+   (default is `<username>/<branch>`)
 
-Please see [config.yml][config.yml] for detailed guide.
+See the full list of available options and detailed configuration guide in
+[config.yml][config.yml].
 
-## Overriding Rules
+## Customization
 
-To override some Packpack rules create a file named `.packpack.yml`
-at the root directory of your git repository. PackPack will try to load
-this and override system-wide rules in [config.yml][config.yml].
+**PackPack** is fully customizable and extensible.
 
-For example, to override version generator, create a `.packpack.yml` file
-with the following content.
+To override some PackPack rules, create a file named `.packpack.yml`
+at the root directory of your git repository. PackPack will load this file
+and override system-wide configuration options and rules from
+[config.yml][config.yml].
+
+For example, to use a custom versioning for your project, create
+`.packpack.yml` file with the following content:
 
 ```
 env:
@@ -151,19 +154,52 @@ env:
   RELEASE=1
 ```
 
-Please see [config.yml][config.yml] for examples.
+Please see [config.yml][config.yml] for advanced examples.
 
-### Custom Rules
+### Extension
 
-If `PACK` is equal `none` - Travis run `test.sh` from project root
-(if file exists)
+**PackPack's** [configuration file][config.yml] works like a Makefile on
+steroids. By default, PackPack executes tasks in the following order:
+`clean` => `tarball` => `build` => `upload`.
 
-### Exclusion
+It's possible to add custom tasks to your `.packpack.yml` and execute
+them thought PackPack. For instance, if you want to collect the code
+coverage information for a C/C++ project, create `.packpack.yml` file
+with the following content:
 
-It's possible to exclude some builds from packaging:
+```
+tasks:
+  coverage:
+   - cmake . -DWITH_GCOV=ON # enable code coverage analysis
+   - make -j # compile
+   - make test # run tests
+   - ${BUILD_DIR}/tools/coverage upload # upload results coveralls.io
+```
+
+Run `./packpack/packpack coverage` or `TASK=coverage ./packpack/packpack`
+to execute the new task. `TASK` environment variable is very useful to
+to override default target name on [Travis CI].
+Here is `.travis.yml` for example above:
+
+```yaml
+sudo: required
+services:
+  - docker
+
+cache: ccache
+
+env:
+    matrix:
+      - OS=centos DIST=6
+      - OS=centos DIST=7
+      <cut>
+      - TASK=coverage
+```
+
+It's possible to exclude some builds from packaging on Travis CI:
 https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
 
-Example: https://github.com/tarantool/tarantool/blob/1.6/.travis.yml
+Example: https://github.com/tarantool/tarantool/blob/1.7/.travis.yml
 
 See Also
 --------

@@ -50,7 +50,7 @@ class Build():
         #
         # Read configuration files
         #
-        self.config = {}
+        self.tasks = {}
         config_paths = [
             os.path.join(self.env.SOURCE_DIR, ".build.yml"),
             os.path.join(self.env.SCRIPT_DIR, "config.yml")
@@ -61,9 +61,9 @@ class Build():
             self.log.info("Found %s configuration file", config_path)
             with open(config_path, 'r') as f:
                 root = yaml.load(f)
-            for k, v in root.get('build', {}).items():
-                if not k in self.config:
-                    self.config[k] = v
+            for k, v in root.get('tasks', {}).items():
+                if not k in self.tasks:
+                    self.tasks[k] = v
             for k, v in root.get('env', {}).items():
                 # Already set, ignore
                 if hasattr(self.env, k):
@@ -81,9 +81,9 @@ class Build():
                     os.exit(-1)
                 setattr(self.env, k, v)
 
-        self.log.debug("Configuration:\n---\n%s---",
-                       yaml.dump({ "env": self.env.__dict__, "build": self.config},
-                                 width=70, indent=2, default_flow_style=False))
+        self.log.debug("Configuration:\n---\n%s---", yaml.dump({
+            "env": self.env.__dict__, "tasks": self.tasks},
+            width=70, indent=2, default_flow_style=False))
 
     def execute(self, cmd, cwd = None, code = 0, pipe = False):
         if type(cmd) is list:
@@ -132,44 +132,42 @@ class Build():
         self.log.info("Build Directory:  %s", self.env.BUILD_DIR)
         self.log.info("%s", "-" * 80)
 
-    def run(self, command):
+    def run(self, task):
         # TODO: move to yaml, implement proper dependency resolution
         DEPS = {
-            "clean": ["clean"],
-            "tarball": ["clean", "tarball"],
-            "build": ["clean", "tarball", "build"],
-            "all": ["clean", "tarball", "build"],
+           "all": ["clean", "tarball", "build"],
         }
 
-        deps = DEPS.get(command, [command])
+        deps = DEPS.get(task, [task])
         for i, dep in enumerate(deps):
             self.log.info("## %s", dep)
             cwd = i < 3 and self.env.SOURCE_DIR or self.env.WORK_DIR
-            self.execute_all(self.config.get(dep, []), cwd = cwd)
+            self.execute_all(self.tasks.get(dep, []), cwd = cwd)
             self.log.info("## %s done", dep)
+
 
 def usage():
     print("Usage: ", sys.argv[0], "[command]")
     print("")
     print("Available commands:")
-    commands = [
+    tasks = [
         ("clean",       "remove all produced files"),
         ("tarball",     "pack source tarball"),
         ("build",       "pack packages"),
     ]
-    for (command, description) in commands:
-        print("    ", command.ljust(20), description)
+    for (task, description) in tasks:
+        print("    ", task.ljust(20), description)
     print("")
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        command = 'all'
+        task = os.getenv('TASK') or 'all'
     elif len(sys.argv) == 2 and sys.argv[1] not in ("-h", "--help"):
-        command = sys.argv[1]
+        task = sys.argv[1]
     else:
         usage()
         sys.exit(1)
 
     build = Build()
     build.info()
-    build.run(command)
+    build.run(task)
