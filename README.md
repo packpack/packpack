@@ -3,7 +3,7 @@
 **PackPack** is a comprehensive ready-to-use solution to build and publish
 RPM and Debian packages in the cloud.
 
-[<img src="/doc/logo.png" align="right" width="120px" height="120px" />][PackPack]
+[<img src="/doc/logo.png" align="right" width="150px" height="150px" />][PackPack]
 
 * Push your code to [GitHub]
 
@@ -15,7 +15,7 @@ RPM and Debian packages in the cloud.
 [PackageCloud].
 
 Cloud-hosted and absolutely free of charge.
-Just a minute from the push to the end user.
+Just a minute from a push to the end user.
 
 ## Supported Distros
 
@@ -43,7 +43,7 @@ $ git describe --always --long
 
 - Register an account on [PackageCloud] and create a repo.
 
-- Add your [GitHub] project to [Travis CI].
+- Add your [GitHub] project to [Travis CI][Travis CI Integration].
 
 - Add `PACKAGECLOUD_TOKEN=<token>` (secret) and
   `PACKAGECLOUD_REPO=<username>/<reponame>` environment variables
@@ -121,7 +121,7 @@ folder:
 
 ## Configuration
 
-**PackPack** settings can be overriden using environment variables.
+**PackPack** settings can be overriden through environment variables.
 The most important options are:
 
 * `OS` - target operating system (e.g. `fedora` or `ubuntu`)
@@ -141,7 +141,7 @@ See the full list of available options and detailed configuration guide in
 
 To override some PackPack rules, create a file named `.packpack.yml`
 at the root directory of your git repository. PackPack will load this file
-and override system-wide configuration options and rules from
+to override system-wide configuration options and rules from
 [config.yml][config.yml].
 
 For example, to use a custom versioning for your project, create
@@ -156,14 +156,14 @@ env:
 
 Please see [config.yml][config.yml] for advanced examples.
 
-### Extension
+## Extension
 
 **PackPack's** [configuration file][config.yml] works like a Makefile on
 steroids. By default, PackPack executes tasks in the following order:
 `clean` => `tarball` => `build` => `upload`.
 
 It's possible to add custom tasks to your `.packpack.yml` and execute
-them thought PackPack. For instance, if you want to collect the code
+them via PackPack. For instance, if you want to collect the code
 coverage information for a C/C++ project, create `.packpack.yml` file
 with the following content:
 
@@ -177,9 +177,10 @@ tasks:
 ```
 
 Run `./packpack/packpack coverage` or `TASK=coverage ./packpack/packpack`
-to execute the new task. `TASK` environment variable is very useful to
-to override default target name on [Travis CI].
-Here is `.travis.yml` for example above:
+to execute the new task.
+
+`TASK` environment variable is very useful to to override default target
+on [Travis CI]. Here is actual `.travis.yml` for the example above:
 
 ```yaml
 sudo: required
@@ -196,29 +197,32 @@ env:
       - TASK=coverage
 ```
 
-It's possible to exclude some builds from packaging on Travis CI:
-https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
+Travis CI [allow to exclude some builds from matrix][Travis CI Matrix].
 
 Example: https://github.com/tarantool/tarantool/blob/1.7/.travis.yml
 
-See Also
---------
+## Contacts
 
+**PackPack** is a spin-off from [Tarantool] project.
+[Tarantool] is a general-purpose database and Lua application server.
+
+* [Email](tarantool@googlegroups.com)
+* [Telegram](http://telegram.me/tarantool)
+* [Twitter](https://twitter.com/rtsisyk)
 * [Tarantool](http://github.com/tarantool/tarantool)
-* Tarantool Repositories on [PackageCloud](https://packagecloud.io/tarantool/1_6)
+* [Tarantool Repositories](https://tarantool.org/download.html)
 
 <b id="f1">1</b> Amazon S3 support is coming soon. [^](#a1)
 [PackPack]: https://github.com/packpack/packpack
 [GitHub]: https://github.com/
 [PackageCloud]: https://packagecloud.io/
+[Tarantool]: https://tarantool.org/
 [Travis CI]: https://travis-ci.org/
+[Travis CI Integration]: https://docs.travis-ci.com/user/getting-started/
 [Travis CI Environment]: https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings
+[Travis CI Matrix]: https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
 [Issues]: https://github.com/packpack/packpack/issues
 [RPM]: https://github.com/tarantool/modulekit/tree/master/rpm
 [Debian]: https://github.com/tarantool/modulekit/tree/master/debian
-[Travis Integration]: https://docs.travis-ci.com/user/getting-started/
 [PackageCloud Integration]: https://packagecloud.io/docs#travis
-[luafun]: https://github.com/rtsisyk/luafun
-[luafun-logo]: https://gist.githubusercontent.com/rtsisyk/28436ebd7bec8cb1a441faf0cc588fb3/raw/7870cfc5d8174041f2abfe12778bb0466e39711e/luafun.png
-[tarantool-logo]: https://gist.githubusercontent.com/rtsisyk/28436ebd7bec8cb1a441faf0cc588fb3/raw/bac8cf73fb98ce892a5b3837627736ceaba37652/tarantool.png
 [config.yml]: https://github.com/packpack/packpack/blob/master/config.yml
