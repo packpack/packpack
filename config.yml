@@ -76,7 +76,7 @@ env:
   # Directory used for builds
   #
   BUILD_DIR:
-   - echo "${SCRIPT_DIR}/root/${PRODUCT}/${VERSION}-${RELEASE}/${OS}/${DIST}"
+   - echo "${SCRIPT_DIR}/root/${OS}/${DIST}"
 
   #
   # Docker repository to use for the build.

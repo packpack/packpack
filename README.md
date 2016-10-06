@@ -173,7 +173,7 @@ tasks:
    - cmake . -DWITH_GCOV=ON # enable code coverage analysis
    - make -j # compile
    - make test # run tests
-   - ${BUILD_DIR}/tools/coverage upload # upload results coveralls.io
+   - ${SCRIPT_DIR}/tools/coverage upload # upload results coveralls.io
 ```
 
 Run `./packpack/packpack coverage` or `TASK=coverage ./packpack/packpack`
