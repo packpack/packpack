@@ -52,7 +52,7 @@ class Build():
         #
         self.tasks = {}
         config_paths = [
-            os.path.join(self.env.SOURCE_DIR, ".build.yml"),
+            os.path.join(self.env.SOURCE_DIR, ".packpack.yml"),
             os.path.join(self.env.SCRIPT_DIR, "config.yml")
         ]
         for config_path in config_paths:
