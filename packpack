@@ -135,6 +135,8 @@ class Build():
     def run(self, task):
         # TODO: move to yaml, implement proper dependency resolution
         DEPS = {
+           "tarball": ["clean", "tarball"],
+           "build": ["clean", "tarball", "build"],
            "all": ["clean", "tarball", "build", "upload"],
         }
 
