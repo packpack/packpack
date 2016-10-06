@@ -153,7 +153,7 @@ tasks:
     - git ls-files >> ${BUILD_DIR}/files
     - git submodule --quiet foreach 'git ls-files | sed "s|^|$path/|"' >> ${BUILD_DIR}/files
     - |
-      if [ "$(uname)" == "Darwin" ]; then \
+      if [ "$(uname)" = "Darwin" ]; then \
           tar \
           --exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
           --exclude=FreeBSD --exclude=debian --exclude=rpm \
