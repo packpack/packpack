@@ -122,6 +122,17 @@ env:
       echo ${REPO_USER}/$(echo ${REPO_NAME} | sed -e "s/\./_/")
 
   #
+  # PackageCloud.io secret tocket
+  #
+  # PACKAGECLOUD_TOKEN: please define using Travis CI hidden variables
+  #
+
+  #
+  # The space-separated white list of production branches to upload packages
+  #
+  PACKAGECLOUD_BRANCHES: "master"
+
+  #
   # Options for GNU Make
   #
   # Use this variable if you want to use parallel make. For example,
@@ -214,8 +225,14 @@ tasks:
       if [ -z "${PACKAGECLOUD_TOKEN}" ] || [ -z "${PACKAGECLOUD_REPO}" ]; then \
         exit 0; \
       fi; \
+      BRANCH=$(git rev-parse --abbrev-ref HEAD); \
+      echo "${BRANCH} ${PACKAGECLOUD_BRANCHES}"; \
+      if echo "${PACKAGECLOUD_BRANCHES}" | grep -wqv "${BRANCH}"; then \
+        echo "The branch ${BRANCH} is not enabled by PACKAGECLOUD_BRANCHES"; \
+        exit 0; \
+      fi; \
       if [ "${OS}" = "centos" ]; then \
-        echo "PackageCloud doesn't support ${OS} ${DIST}"; \
+                  echo "PackageCloud: doesn't support ${OS} ${DIST}"; \
         echo "Using repository for RHEL"; \
         OS=el; \
       elif [ "${DIST}" = "rawhide" ] || [ "${DIST}" = "sid" ]; then \
