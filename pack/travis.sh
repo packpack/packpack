@@ -79,12 +79,12 @@ elif [ "$PACK" == "coverage" ]; then
     make -f .build.mk travis_coverage
     [ $? -eq 0  ] || exit $?
 
-    ${SCRIPTDIR}/coverage list
+    ${SCRIPTDIR}/tools/coverage list
     [ $? -eq 0  ] || exit $?
 
     if [ -n "${COVERALLS_TOKEN}"  ]; then
         gem install coveralls-lcov
-        ${SCRIPTDIR}/coverage upload
+        ${SCRIPTDIR}/tools/coverage upload
         [ $? -eq 0  ] || exit $?
         exit 0
     fi
