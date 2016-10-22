@@ -241,7 +241,7 @@ elif [ "${PACK}" == "deb" ]; then
         ${SCRIPTDIR}/build.sh
     fi
 elif [ "${PACK}" == "source" ]; then
-    ${SCRIPTDIR}/build.sh tarball
+    TARBALL_COMPRESSOR=gz ${SCRIPTDIR}/build.sh tarball
 else
     usage "Invalid PACK value"
 fi

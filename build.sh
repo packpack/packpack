@@ -69,7 +69,7 @@ echo \
     "sudo usermod -a -G sudo $USER 2>/dev/null || true\n"\
     "sudo usermod -a -G wheel $USER 2>/dev/null || true\n"\
     "sudo usermod -a -G adm $USER 2>/dev/null || true\n"\
-    "sudo -u $USER \$@\n"\
+    "sudo -E -u $USER \$@\n"\
     > ${BUILDDIR}/userwrapper.sh
 env > ${BUILDDIR}/env
 chmod a+x ${BUILDDIR}/userwrapper.sh
