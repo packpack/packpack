@@ -165,12 +165,17 @@ fi
 
 [ -n "${PRODUCT}" ] || usage "Missing PRODUCT"
 
-if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then
-    # Numeric dist, e.g. centos6 or fedora23
-    DISTRO="${OS}${DIST}"
+if [ -n "${OS}" ] && [ -n "${DIST}" ]; then
+    if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then
+        # Numeric dist, e.g. centos6 or fedora23
+        DISTRO="${OS}${DIST}"
+    else
+        # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
+        DISTRO="${OS}-${DIST}"
+    fi
 else
-    # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
-    DISTRO="${OS}-${DIST}"
+    # Set distro to ubuntu-xenial if OS or DIST is invalid
+    DISTRO=ubuntu-xenial
 fi
 
 GITVERSION=$(git describe --long --always)
@@ -193,9 +198,7 @@ echo "Product:          ${PRODUCT}"
 echo "Source:           ${GITVERSION}, branch ${BRANCH}"
 echo "Version:          ${VERSION}"
 echo "Release:          ${RELEASE}"
-if ! { [ -z "$OS" ] || [ -z "$DIST" ]; } then
-    echo "Target:           ${OS}-${DIST}"
-fi
+echo "Target:           ${DISTRO}"
 
 if [ -n "${FTP}" ]; then
     echo "FTP host:         ${FTP_HOST} (repo ${REPO_PREFIX})"
