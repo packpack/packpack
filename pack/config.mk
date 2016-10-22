@@ -71,7 +71,7 @@ TARBALL_COMPRESSOR ?= xz
 #
 ifneq (,$(shell grep wheezy /etc/os-release))
 # Debian Wheezy fails to build tarantool/tarantool and msgpuck with "-j"
-SMPFLAGS ?= -j4
+SMPFLAGS ?= -j1
 else
 SMPFLAGS ?= -j16
 endif
