@@ -56,9 +56,6 @@ case "$1" in
     *) ;;
 esac
 
-set -e
-
-
 #
 # Create an entry point for Docker to allow builds from non-root user
 #
