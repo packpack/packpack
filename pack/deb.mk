@@ -1,74 +1,84 @@
-ifndef PRODUCT
-$(error Missing PRODUCT variable)
-endif
-ifndef NAME
-$(error Missing NAME variable)
-endif
-ifndef TARBALL
-$(error Missing TARBALL variable)
-endif
-ifndef VERSION
-$(error Missing VERSION variable)
-endif
-ifndef RELEASE
-$(error Missing RELEASE variable)
-endif
-ifndef DEBEMAIL
-DEBEMAIL="build@tarantool.org"
-endif
-ifndef DEBFULLNAME
-DEBFULLNAME="Tarantool Buildbot"
-endif
+#
+# Packer for Debian packages
+#
 
-# https://wiki.debian.org/IntroDebianPackaging:
-# The name consists of the source package name, an underscore, the upstream
-# version number, followed by .orig.tar.gz
-# Note that there is an underscore (_), not a dash (-), in the name.
-# This is important, because the packaging tools are picky.
-DEB_NAME=$(PRODUCT)_$(VERSION)
-DEB_TARBALL=$(DEB_NAME).orig.tar.gz
+DPKG_ARCH:=$(shell dpkg --print-architecture)
+DPKG_CHANGES:=$(PRODUCT)_$(VERSION)-$(RELEASE)_$(DPKG_ARCH).changes
+DPKG_BUILD:=$(PRODUCT)_$(VERSION)-$(RELEASE)_$(DPKG_ARCH).build
+DPKG_DSC:=$(PRODUCT)_$(VERSION)-$(RELEASE).dsc
+DPKG_ORIG_TARBALL:=$(PRODUCT)_$(VERSION).orig.tar.$(TARBALL_COMPRESSOR)
+DPKG_DEBIAN_TARBALL:=$(PRODUCT)_$(VERSION)-$(RELEASE).debian.tar.$(TARBALL_COMPRESSOR)
 
-all: results
+#
+# Prepare build directory
+#
+$(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/: $(BUILDDIR)/$(TARBALL)
+	@echo "-------------------------------------------------------------------"
+	@echo "Preparing build directory"
+	@echo "-------------------------------------------------------------------"
+	cd $(BUILDDIR) && tar xf $<
+	test -d $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+	cp -pfR $(SOURCEDIR)/debian/ $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
+		NAME=$(CHANGELOG_NAME) DEBEMAIL=$(CHANGELOG_EMAIL) \
+		dch -b -v "$(VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
 
-# Unpack source tarball
-$(NAME)/debian/changelog: $(TARBALL)
-	tar xf $<
-	mv -f debian/ $(NAME)/
-	ls -l $(NAME)/
+#
+# Create a symlink for orig.tar.gz
+#
+$(BUILDDIR)/$(DPKG_ORIG_TARBALL): $(BUILDDIR)/$(TARBALL)
+	cd $(BUILDDIR) && ln -s $(TARBALL) $(DPKG_ORIG_TARBALL)
 
-# Copy tarball to .orig.tar.gz (needed to generate .dsc)
-$(DEB_TARBALL): $(TARBALL)
-	cp -pf $< $@
+prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
+         $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 
+#
 # Build packages
-$(DEB_NAME)-$(RELEASE).dsc: $(NAME)/debian/changelog $(DEB_TARBALL)
-	@echo "-------------------------------------------------------------------"
-	@echo "Updating changelog"
-	@echo "-------------------------------------------------------------------"
-	cd $(NAME) && NAME=$(DEBFULLNAME) DEBEMAIL=$(DEBEMAIL) \
-		dch -b -v $(VERSION)-$(RELEASE) "Automatic build"
+#
+$(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
+                             $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
-	# Clear APT cache to fix Hash sum mismatch
+	## Clear APT cache to fix Hash sum mismatch
 	sudo apt-get clean
 	sudo rm -rf /var/lib/apt/lists/*
 	sudo apt-get update > /dev/null
-	cd $(NAME) && sudo mk-build-deps -i --tool "apt-get -y" || :
-	cd $(NAME) && sudo rm -f *build-deps_*.deb
+	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo mk-build-deps -i --tool "apt-get -y" || :
+	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo rm -f *build-deps_*.deb
 	@echo
 	@echo "-------------------------------------------------------------------"
-	@echo "Building packages"
+	@echo "Building Debian packages"
 	@echo "-------------------------------------------------------------------"
-	cd $(NAME) && debuild -uc -us -j4
+	rm -rf $(BUILDDIR)/tarball
+	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
+		debuild -Z$(TARBALL_COMPRESSOR) -uc -us -j
+	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+	@echo "------------------------------------------------------------------"
+	@echo "Debian packages are ready"
+	@echo "-------------------------------------------------------------------"
+	@ls -1s $(BUILDDIR)/$(DPKG_CHANGES) \
+		  $(BUILDDIR)/$(DPKG_BUILD) \
+		  $(BUILDDIR)/$(DPKG_DEBIAN_TARBALL) \
+		  $(BUILDDIR)/$(DPKG_ORIG_TARBALL) \
+		  $(BUILDDIR)/$(DPKG_DSC) \
+		  $(BUILDDIR)/*.deb
+	@echo "--"
+	@echo
 
-results: $(DEB_NAME)-$(RELEASE).dsc
-	@echo "-------------------------------------------------------------------"
-	@echo "Copying packages"
-	@echo "-------------------------------------------------------------------"
-	mkdir -p $@.tmp/
-	mv -f *.deb *.changes *.dsc $@.tmp/
-	mv -f *.debian.tar.* *.orig.tar.* $@.tmp/
-	mv -f *.build $@.tmp/build.log
-	mv -f $@.tmp $@
-	touch $@/.done
+package: $(BUILDDIR)/$(DPKG_CHANGES)
+
+#
+# Remove the build directory
+#
+clean::
+	rm -f $(BUILDDIR)/$(DPKG_CHANGES)
+	rm -f $(BUILDDIR)/$(DPKG_BUILD)
+	rm -f $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
+	rm -f $(BUILDDIR)/$(DPKG_DEBIAN_TARBALL)
+	rm -f $(BUILDDIR)/$(DPKG_DSC)
+	rm -f $(BUILDDIR)/*.deb
+	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+
+.PHONY: clean
+.PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/

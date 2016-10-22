@@ -1,62 +1,46 @@
-ifndef PRODUCT
-$(error Missing PRODUCT variable)
-endif
-ifndef NAME
-$(error Missing NAME variable)
-endif
-ifndef TARBALL
-$(error Missing TARBALL variable)
-endif
-ifndef VERSION
-$(error Missing VERSION variable)
-endif
-ifndef RELEASE
-$(error Missing RELEASE variable)
-endif
+#
+# Packer for Debian packages
+#
 
 # Tarantool: don't use long paths to avoid "AF_UNIX path too long"
-RPMBUILDROOT=$(shell rpm -E %_topdir)
 RPMDIST=$(shell rpm -E "%{dist}")
 PKGVERSION=$(VERSION)-$(RELEASE)$(RPMDIST)
-RPMSPECIN=$(PRODUCT).spec
-RPMSPEC=$(RPMBUILDROOT)/SPECS/$(PRODUCT).spec
-RPMTARBALL=$(RPMBUILDROOT)/SOURCES/$(TARBALL)
-RPMSRC=$(RPMBUILDROOT)/SRPMS/$(PRODUCT)-$(PKGVERSION).src.rpm
-RPM=$(RPMBUILDROOT)/RPMS/$(PRODUCT)-$(PKGVERSION).x86_64.rpm
+RPMSPEC=$(PRODUCT).spec
+RPMSRC=$(PRODUCT)-$(PKGVERSION).src.rpm
 
-all: results
-
-$(RPMTARBALL):
-	@echo "-------------------------------------------------------------------"
-	@echo "Preparing RPM tarball"
-	@echo "-------------------------------------------------------------------"
-	mkdir -p $(RPMBUILDROOT)/SOURCES
-	ln -s $(abspath $(TARBALL)) $@
-	@echo
-
-$(RPMSPEC): $(RPMSPECIN)
+$(BUILDDIR)/$(RPMSPEC): $(SOURCEDIR)/rpm/$(RPMSPEC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Preparing RPM spec"
 	@echo "-------------------------------------------------------------------"
-	@mkdir -p $(RPMBUILDROOT)/SPECS
 	@cp $< $@.tmp
 	sed -e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
 		 -e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
 		 -e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
-		 -e 's/%setup .*/%setup -q -n $(NAME)/' \
+		 -e 's/%setup .*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
 		 -i $@.tmp
 	@grep -E "Version:|Release:|Source0|%setup" $@.tmp
 	@mv -f $@.tmp $@
 	@echo
 
-$(RPMSRC): $(RPMSPEC) $(RPMTARBALL)
+#
+# Build source RPM
+#
+$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(RPMSPEC) $(BUILDDIR)/$(TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
-	rpmbuild -bs $(RPMSPEC)
-	@echo
+	rpmbuild \
+		--define '_topdir $(BUILDDIR)' \
+		--define '_sourcedir $(BUILDDIR)' \
+		--define '_specdir $(BUILDDIR)' \
+		--define '_srcrpmdir $(BUILDDIR)' \
+		-bs $(BUILDDIR)/$(RPMSPEC)
+prepare: $(BUILDDIR)/$(RPMSRC)
 
-.done: $(RPMSRC)
+#
+# Build RPM packages
+#
+package: $(BUILDDIR)/$(RPMSRC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
@@ -64,32 +48,34 @@ $(RPMSRC): $(RPMSPEC) $(RPMTARBALL)
 	sudo dnf builddep -y $< || sudo yum-builddep -y $<
 	@echo
 	@echo "-------------------------------------------------------------------"
-	@echo "Building packages"
+	@echo "Building RPM packages"
 	@echo "-------------------------------------------------------------------"
-	rpmbuild --rebuild --with backtrace $< 2>&1 | tee build.log
-	@touch $@
+	rpmbuild \
+		--define '_topdir $(BUILDDIR)' \
+		--define '_sourcedir $(BUILDDIR)' \
+		--define '_specdir $(BUILDDIR)' \
+		--define '_srcrpmdir $(BUILDDIR)' \
+		--define '_builddir $(BUILDDIR)' \
+		--define '_smp_mflags -j' \
+		--rebuild --with backtrace $< 2>&1 | tee $(BUILDDIR)/build.log
+	mv -f $(BUILDDIR)/RPMS/*/*.rpm $(BUILDDIR)
+	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT
+	@echo "------------------------------------------------------------------"
+	@echo "RPM packages are ready"
+	@echo "-------------------------------------------------------------------"
+	@ls -1s $(BUILDDIR)/*$(PRODUCT)*$(PKGVERSION).*.rpm  $(BUILDDIR)/build.log
+	@echo "--"
 	@echo
 
-results: .done
-	rm -rf $@
-	@echo "-------------------------------------------------------------------"
-	@echo "Copying packages"
-	@echo "-------------------------------------------------------------------"
-	mkdir -p $@.tmp/
-	mv -f $(RPMBUILDROOT)/RPMS/*/*$(PRODUCT)*$(PKGVERSION).*.rpm $@.tmp/
-	mv -f $(RPMSRC) $@.tmp/
-	mv -f build.log $@.tmp/
-	mv $@.tmp $@
-	touch $@/.done
-
-tarball: $(RPMTARBALL)
-rpmsrc: $(RPMSRC)
-spec: $(RPMSPEC)
-rpm: .rpm
-
 # Upload .src.rpm to koji.fedoraproject.org
-koji: $(RPMSRC)
-	$(CHROOT) koji build --scratch rawhide $<
+koji: $(BUILDDIR)/$(RPMSRC)
+	koji build --scratch rawhide $<
 
-clean:
-	rm -f $(TARBALL) $(RPMSPEC) $(RPMTARBALL) $(RPMSRC) .rpm .done
+clean::
+	rm -f $(BUILDDIR)/$(RPMSPEC)
+	rm -f $(BUILDDIR)/$(RPMSRC)
+	rm -f $(BUILDDIR)/*.rpm
+	rm -f $(BUILDDIR)/build.log
+	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+
+.PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC) $(BUILDDIR)/$(RPMSPEC)

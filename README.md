@@ -114,7 +114,6 @@ folder:
 
 * `./build/build` without arguments starts packaging for all supported distros
 * `./build/build clean` - clean buildroot (./build/root/)
-* `./build/build download` - download images from Docker Hub
 * `./build/build tarball`
 * `./build/build ${OS}-${DIST}` - build packages for ${OS}-${DIST}, e.g.
   debian-sid, fedora23 or centos7

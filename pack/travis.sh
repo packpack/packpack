@@ -7,7 +7,7 @@ if [ ! -z $(which realpath) ]; then
 fi
 
 SCRIPT=$($READLINK $0)
-SCRIPT_DIR=$($READLINK $(dirname ${SCRIPT})/../)
+SCRIPTDIR=$($READLINK $(dirname ${SCRIPT})/../)
 
 ENABLED_BRANCHES="${ENABLED_BRANCHES:-master 1.6 1.7}"
 DOCKER_REPO="tarantool/build"
@@ -51,18 +51,6 @@ if [ $? -ne 0 ]; then
     exit -1
 fi
 
-if [ -z "${VERSION}" ]; then
-    VERSION=$(git describe --long --always)
-fi
-
-if [ -z "${VERSION}" ]; then
-    echo "Failed to get version from git describe"
-    exit -1
-fi
-
-# Save git describe result to VERSION file
-echo ${VERSION} > VERSION
-
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     echo "Increase the maximum number of open file descriptors on macOS"
     sudo launchctl limit maxfiles 1000000 1000000
@@ -91,12 +79,12 @@ elif [ "$PACK" == "coverage" ]; then
     make -f .build.mk travis_coverage
     [ $? -eq 0  ] || exit $?
 
-    ${SCRIPT_DIR}/coverage list
+    ${SCRIPTDIR}/coverage list
     [ $? -eq 0  ] || exit $?
 
     if [ -n "${COVERALLS_TOKEN}"  ]; then
         gem install coveralls-lcov
-        ${SCRIPT_DIR}/coverage upload
+        ${SCRIPTDIR}/coverage upload
         [ $? -eq 0  ] || exit $?
         exit 0
     fi
@@ -113,8 +101,9 @@ echo 'Packaging mode'
 if [ "${OS}" == "el" ]; then
     OS=centos
 fi
+
 [ -n "${DIST}" ] || [ "$PACK" == "source"  ] || usage "Missing DIST"
-[ -x ${SCRIPT_DIR}/build ] || usage "Missing ./build"
+[ -x ${SCRIPTDIR}/build.sh ] || usage "Missing ./build.sh"
 
 if [ -n "${TRAVIS_REPO_SLUG}" ]; then
     echo "Travis CI detected"
@@ -178,22 +167,34 @@ fi
 
 if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then
     # Numeric dist, e.g. centos6 or fedora23
-    OSDIST="${OS}${DIST}"
+    DISTRO="${OS}${DIST}"
 else
     # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
-    OSDIST="${OS}-${DIST}"
+    DISTRO="${OS}-${DIST}"
 fi
 
-DOCKER_TAG=${DOCKER_REPO}:${OSDIST}
-DOCKERDO="${SCRIPT_DIR}/dockerdo ${DOCKER_TAG}"
+GITVERSION=$(git describe --long --always)
+export VERSION=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1/p')
+export RELEASE=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\2/p')
+
+if [ "${PRODUCT}" = "tarantool" ]; then
+    # Special overrides for tarantool package (legacy)
+    if [ "${OS}" = "debian" ] || [ "${OS}" = "ubuntu" ]; then
+        export VERSION=$(echo "${GITVERSION}" | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2.\3/p')
+    else
+        export VERSION=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
+    fi
+    export RELEASE=1
+fi
 
 echo
 echo '-----------------------------------------------------------'
 echo "Product:          ${PRODUCT}"
-echo "Version:          ${VERSION} (branch ${BRANCH})"
+echo "Source:           ${GITVERSION}, branch ${BRANCH}"
+echo "Version:          ${VERSION}"
+echo "Release:          ${RELEASE}"
 if ! { [ -z "$OS" ] || [ -z "$DIST" ]; } then
-    echo "Target:           ${OSDIST}"
-    echo "Docker Image:     ${DOCKER_TAG}"
+    echo "Target:           ${OS}-${DIST}"
 fi
 
 if [ -n "${FTP}" ]; then
@@ -216,53 +217,28 @@ fi
 echo '-----------------------------------------------------------'
 echo
 
-# Clean buildroot
-echo "Cleaning buildroot"
-rm -rf buildroot/
-git clean -f -X -d
-echo ${VERSION} > VERSION
+SOURCEDIR=$(pwd)
+BUILDDIR=${SOURCEDIR}/build/root/
+mkdir -p ${BUILDDIR}
 
-ROCKSPEC=$(ls -1 *.rockspec rockspec/*-scm*.rockspec 2> /dev/null)
-
-echo "Make version is:"
-make --version
-
-if ! { [ -z "$OS" ] || [ -z "$DIST" ]; } then
-    RESULTS=${SCRIPT_DIR}/root/${PACK}-${OSDIST}/results/
-else
-    RESULTS=${SCRIPT_DIR}/root/
-fi
+export SOURCEDIR BUILDDIR DOCKER_REPO
+export PRODUCT DISTRO VERSION RELEASE
 
 if [ "${PACK}" == "rpm" ]; then
     if [ -f "rpm/${PRODUCT}.spec" ] ; then
-        echo "Found RPM: rpm/${PRODUCT}.spec"
-        echo ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
-            DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
-        ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
-            DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
-    elif [ -f "${ROCKSPEC}" ]; then
-        RESULTS=${SCRIPT_DIR}/root/rockrpm-${OSDIST}/results/
-        ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
-            DOCKER_REPO=${DOCKER_REPO} rock-${OSDIST}
+        echo "Building RPM package from rpm/${PRODUCT}.spec"
+        ${SCRIPTDIR}/build.sh
     else
         echo "Can't find RPM spec"
         exit 1
     fi
 elif [ "${PACK}" == "deb" ]; then
     if [ -d "debian/" ]; then
-        echo "Found debian/"
-        ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
-            DOCKER_REPO=${DOCKER_REPO} ${OSDIST}
-    elif [ -f "${ROCKSPEC}" ]; then
-        RESULTS=${SCRIPT_DIR}/root/rockdeb-${OSDIST}/results/
-        ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} \
-            DOCKER_REPO=${DOCKER_REPO} rock-${OSDIST}
-    else
-        echo "Can't find debian/"
-        exit 1
+        echo "Building Debian package from debian/"
+        ${SCRIPTDIR}/build.sh
     fi
 elif [ "${PACK}" == "source" ]; then
-    ${SCRIPT_DIR}/build PRODUCT=${PRODUCT} tarball
+    ${SCRIPTDIR}/build.sh tarball
 else
     usage "Invalid PACK value"
 fi
@@ -275,7 +251,7 @@ fi
 if [ -n "${FTP_HOST}" ]; then
     echo "Exporting packages to FTP ${FTP_HOST}/${REPO_PREFIX}"
     #sudo apt-get install ftp
-    cd ${RESULTS}
+    cd ${BUILDDIR}
     rm -f *.md5sum ftp.log
     cat > ftpscript.txt <<-EOF
 open ${FTP_HOST}
@@ -335,7 +311,7 @@ fi
 if [ -n "${SFTP_HOST}" ]; then
     echo "Exporting packages to SFTP ${SFTP_HOST}/${REPO_PREFIX}"
     decrypt_travis_key
-    cd ${RESULTS}
+    cd ${BUILDDIR}
     rm -f *.md5sum sftp.log sftpscript.txt || break
     touch sftpscript.txt
     if [ "${PACK}" == "rpm" -a -n "${SFTP_UPLOAD_RPM}" ]; then
@@ -394,28 +370,28 @@ if [ -n "${PACKAGECLOUD_TOKEN}" ]; then
     echo "Exporting packages to packagecloud.io repo ${PACKAGECLOUD_REPO}"
     if [ "${OS}" == "centos" ]; then
         # Packagecloud doesn't support CentOS, but supports RHEL
-        echo "PackageCloud doesn't support ${OSDIST}"
+        echo "PackageCloud doesn't support ${OS}"
         echo "Using repository for RHEL"
         OS=el
     elif [ "${DIST}" == "rawhide" ] || [ "${DIST}" == "sid" ]; then
-        echo "PackageCloud doesn't support ${OSDIST}"
+        echo "PackageCloud doesn't support ${OS} ${DIST}"
         echo "Skipping..."
         exit 0
     fi
-    gem install package_cloud
+    sudo gem install package_cloud
     if [ "${PACK}" == "rpm" ]; then
         package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
-            ${RESULTS}/*[!src].rpm --skip-errors
-        if [ "$(echo ${RESULTS}/*.src.rpm)" != "${RESULTS}/*.src.rpm" ]; then
+            ${BUILDDIR}/*[!src].rpm --skip-errors
+        if [ "$(echo ${BUILDDIR}/*.src.rpm)" != "${BUILDDIR}/*.src.rpm" ]; then
             package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/SRPMS/ \
-                ${RESULTS}/*.src.rpm --skip-errors
+                ${BUILDDIR}/*.src.rpm --skip-errors
         fi
     elif [ "${PACK}" == "deb" ]; then
         package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
-            ${RESULTS}/*.deb --skip-errors
-        if [ "$(echo ${RESULTS}/*.dsc)" != "${RESULTS}/*.dsc" ]; then
+            ${BUILDDIR}/*.deb --skip-errors
+        if [ "$(echo ${BUILDDIR}/*.dsc)" != "${BUILDDIR}/*.dsc" ]; then
             package_cloud push ${PACKAGECLOUD_REPO}/${OS}/${DIST}/ \
-                ${RESULTS}/*.dsc --skip-errors
+                ${BUILDDIR}/*.dsc --skip-errors
         fi
     fi
 fi
