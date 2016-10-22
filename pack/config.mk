@@ -65,3 +65,13 @@ TARBALL_EXTRA_FILES ?=
 
 # Compression method
 TARBALL_COMPRESSOR ?= xz
+
+#
+# Specifies the number of GNU make jobs (commands) to run simultaneously.
+#
+ifneq (,$(shell grep wheezy /etc/os-release))
+# Debian Wheezy fails to build tarantool/tarantool and msgpuck with "-j"
+SMPFLAGS ?= -j4
+else
+SMPFLAGS ?= -j16
+endif

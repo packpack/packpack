@@ -52,7 +52,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
 	@echo "-------------------------------------------------------------------"
 	rm -rf $(BUILDDIR)/tarball
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
-		debuild -Z$(TARBALL_COMPRESSOR) -uc -us -j
+		debuild -Z$(TARBALL_COMPRESSOR) -uc -us $(SMPFLAGS)
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 	@echo "------------------------------------------------------------------"
 	@echo "Debian packages are ready"

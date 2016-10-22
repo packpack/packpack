@@ -56,7 +56,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
 		--define '_builddir $(BUILDDIR)' \
-		--define '_smp_mflags -j' \
+		--define '_smp_mflags $(SMPFLAGS)' \
 		--rebuild --with backtrace $< 2>&1 | tee $(BUILDDIR)/build.log
 	mv -f $(BUILDDIR)/RPMS/*/*.rpm $(BUILDDIR)
 	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT
