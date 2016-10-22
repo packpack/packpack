@@ -71,8 +71,12 @@ echo \
     "sudo usermod -a -G adm $USER 2>/dev/null || true\n"\
     "sudo -E -u $USER \$@\n"\
     > ${BUILDDIR}/userwrapper.sh
-env > ${BUILDDIR}/env
 chmod a+x ${BUILDDIR}/userwrapper.sh
+
+#
+# Save defined configuration variables to ./env file
+#
+env | grep -E "PRODUCT|VERSION|RELEASE|TARBALL_|CHANGELOG_" > ${BUILDDIR}/env
 
 #
 # Start Docker
