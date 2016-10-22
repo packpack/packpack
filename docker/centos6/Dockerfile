@@ -16,6 +16,10 @@ RUN echo "source /opt/rh/devtoolset-2/enable" > /etc/profile.d/devtoolset-2.sh
 # Needed for rpmbuild
 ENV CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
 ENV CXX=/opt/rh/devtoolset-2//root/usr/bin/g++
+RUN ln -s /opt/rh/devtoolset-2/root/usr/bin/gcc /usr/bin/gcc
+RUN ln -s /usr/bin/gcc /usr/bin/cc
+RUN ln -s /opt/rh/devtoolset-2/root/usr/bin/g++ /usr/bin/g++
+RUN ln -s /usr/bin/g++ /usr/bin/c++
 
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 # Fix paths for mock
