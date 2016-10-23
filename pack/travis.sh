@@ -184,11 +184,7 @@ export RELEASE=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0
 
 if [ "${PRODUCT}" = "tarantool" ]; then
     # Special overrides for tarantool package (legacy)
-    if [ "${OS}" = "debian" ] || [ "${OS}" = "ubuntu" ]; then
-        export VERSION=$(echo "${GITVERSION}" | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2.\3/p')
-    else
-        export VERSION=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
-    fi
+    export VERSION=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
     export RELEASE=1
 fi
 
