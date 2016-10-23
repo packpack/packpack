@@ -3,7 +3,7 @@
 #
 
 DEB_VERSION:=$(VERSION)
-ifneq ($(shell cd $(SOURCEDIR) && dpkg-parsechangelog|grep ^Version|grep -E "g[a-z0-9]{7}\-[0-9]+"),)
+ifneq ($(shell dpkg-parsechangelog|grep ^Version|grep -E "g[a-z0-9]{7}\-[0-9]+"),)
 # Add git hash to follow convention of official Debian packages
 DEB_VERSION := $(VERSION).g$(shell echo $(REVISION)|cut -c1-7)
 $(info Added git hash to Debian package version: $(VERSION) => $(DEB_VERSION))
@@ -25,7 +25,7 @@ $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/: $(BUILDDIR)/$(TARBALL)
 	@echo "-------------------------------------------------------------------"
 	cd $(BUILDDIR) && tar xf $<
 	test -d $(BUILDDIR)/$(PRODUCT)-$(VERSION)
-	cp -pfR $(SOURCEDIR)/debian/ $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+	cp -pfR debian/ $(BUILDDIR)/$(PRODUCT)-$(VERSION)
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		NAME=$(CHANGELOG_NAME) DEBEMAIL=$(CHANGELOG_EMAIL) \
 		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"

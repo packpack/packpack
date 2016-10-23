@@ -2,7 +2,7 @@
 
 # Defaults
 BUILD=1.0.0
-SOURCEDIR=${SOURCEDIR:-${PWD}}
+SOURCEDIR=$(pwd)
 BUILDDIR=${BUILDDIR:-${PWD}/build}
 PACKDIR=$(cd $(dirname $0) && pwd)/pack
 DISTRO=${DISTRO:-ubuntu-xenial}
@@ -28,7 +28,6 @@ usage() {
     echo ""
     echo " * PRODUCT - the name of software product, e.g. 'tarantool'"
     echo " * DISTRO - the name of distribution (${DISTRO})"
-    echo " * SOURCEDIR - source directory with git repository (${SOURCEDIR})"
     echo " * BUILDDIR - directory used for out-of-source build (${BUILDDIR})"
     echo " * DOCKER_REPO - Docker repository to use (${DOCKER_REPO})"
     echo ""
@@ -84,12 +83,12 @@ docker run \
         --volume "${SOURCEDIR}:/source:ro" \
         --volume "${BUILDDIR}:/build" \
         --env-file ${BUILDDIR}/env \
-        --workdir /pack \
+        --workdir /source \
         --rm=true \
         --entrypoint=/build/userwrapper.sh \
         -e CCACHE_DIR=/ccache \
         --volume "${HOME}/.cache:/ccache" \
         ${DOCKER_REPO}:${DISTRO} \
-        make SOURCEDIR=/source BUILDDIR=/build -j $@
+        make -f /pack/Makefile -C /source BUILDDIR=/build -j $@
 
 # vim: filetype=sh tabstop=4 shiftwidth=4 softtabstop=4 expandtab

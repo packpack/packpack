@@ -220,12 +220,10 @@ fi
 echo '-----------------------------------------------------------'
 echo
 
-SOURCEDIR=$(pwd)
-BUILDDIR=${SOURCEDIR}/build/root/
+BUILDDIR=$(pwd)/build/root/
 mkdir -p ${BUILDDIR}
 
-export SOURCEDIR BUILDDIR DOCKER_REPO
-export PRODUCT DISTRO VERSION RELEASE
+export BUILDDIR DOCKER_REPO PRODUCT DISTRO VERSION RELEASE
 
 if [ "${PACK}" == "rpm" ]; then
     if [ -f "rpm/${PRODUCT}.spec" ] ; then

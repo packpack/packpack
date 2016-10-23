@@ -2,28 +2,24 @@
 # Common configuration options
 #
 
-# Source directory
-SOURCEDIR?=$(CURDIR)
-
 # Build directory
-BUILDDIR?=$(CURDIR)
+BUILDDIR?=$(CURDIR)/build
 
 #
 # The name of the software product.
 #
 ifeq ($(PRODUCT),) # Guess from Debian package
-PRODUCT := $(word 2,$(shell grep Source: $(SOURCEDIR)/debian/control 2>/dev/null))
+PRODUCT := $(word 2,$(shell grep Source: debian/control 2>/dev/null))
 endif
 ifeq ($(PRODUCT),) # Guess from RPM package
-PRODUCT := $(word 2,$(shell grep Name: $(SOURCEDIR)/rpm/*.spec 2>/dev/null))
+PRODUCT := $(word 2,$(shell grep Name: rpm/*.spec 2>/dev/null))
 endif
 ifeq ($(PRODUCT),) # Guess from git repository name
-PRODUCT := $(shell cd $(SOURCEDIR) && \
-					git config --get remote.origin.url | \
+PRODUCT := $(shell git config --get remote.origin.url | \
 					sed -e 's/.*\///' -e 's/.git$$//')
 endif
 ifeq ($(PRODUCT),) # Guess from directory name
-PRODUCT := $(shell basename $(SOURCEDIR))
+PRODUCT := $(shell basename $(CURDIR))
 endif
 
 #
@@ -40,7 +36,7 @@ endif
 # Sic: please follow Semantic Versioning (http://semver.org),
 # Debian policies and Fedora guidelines then planning your releases.
 #
-VERSION ?= $(shell cd $(SOURCEDIR) && git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
+VERSION ?= $(shell git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
 ifeq ($(VERSION),) # Fallback
 VERSION := 0.0.1
 endif
@@ -55,7 +51,7 @@ RELEASE ?= 1
 #
 # git hash without 'g' prefix, 7 hexadecimal digits
 #
-REVISION ?= $(shell cd $(SOURCEDIR) && git rev-parse HEAD)
+REVISION ?= $(shell git rev-parse HEAD)
 
 # Name, email and text for changelog entry
 CHANGELOG_NAME ?= "PackPack"

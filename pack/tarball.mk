@@ -13,7 +13,7 @@ $(BUILDDIR)/VERSION:
 	@echo "Creating VERSION file"
 	@echo "-------------------------------------------------------------------"
 	@mkdir -p $(BUILDDIR)
-	cd $(SOURCEDIR) && git describe --long --always > $@
+	git describe --long --always > $@
 
 #
 # Generate the list of source files for tarball
@@ -23,8 +23,8 @@ $(BUILDDIR)/ls-lR.txt:
 	@echo "Generating the list of source files"
 	@echo "-------------------------------------------------------------------"
 	@mkdir -p $(BUILDDIR)
-	cd $(SOURCEDIR) && git ls-files > $@
-	cd $(SOURCEDIR) && git submodule --quiet foreach 'git ls-files | sed "s|^|$$path/|"' >> $@
+	git ls-files > $@
+	git submodule --quiet foreach 'git ls-files | sed "s|^|$$path/|"' >> $@
 
 #
 # Pack source tarball
@@ -33,7 +33,7 @@ $(BUILDDIR)/$(TARBALL): $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
 	@echo "-------------------------------------------------------------------"
 	@echo "Creating source tarball"
 	@echo "-------------------------------------------------------------------"
-	cd $(SOURCEDIR) && tar \
+	tar \
 		--exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
 		$(TARBALL_EXTRA_ARGS) \
 		--exclude=FreeBSD --exclude=debian --exclude=rpm \

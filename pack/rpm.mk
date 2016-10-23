@@ -8,7 +8,7 @@ PKGVERSION=$(VERSION)-$(RELEASE)$(RPMDIST)
 RPMSPEC=$(PRODUCT).spec
 RPMSRC=$(PRODUCT)-$(PKGVERSION).src.rpm
 
-$(BUILDDIR)/$(RPMSPEC): $(SOURCEDIR)/rpm/$(RPMSPEC)
+$(BUILDDIR)/$(RPMSPEC): rpm/$(RPMSPEC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Preparing RPM spec"
 	@echo "-------------------------------------------------------------------"

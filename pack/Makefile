@@ -5,7 +5,7 @@ all: package
 PACKDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 include $(PACKDIR)/config.mk
--include $(SOURCEDIR)/.build.mk
+-include .build.mk
 
 include $(PACKDIR)/tarball.mk
 ifneq (,$(wildcard /etc/redhat-release))
