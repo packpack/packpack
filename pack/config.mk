@@ -52,6 +52,11 @@ endif
 #
 RELEASE ?= 1
 
+#
+# git hash without 'g' prefix, 7 hexadecimal digits
+#
+REVISION ?= $(shell cd $(SOURCEDIR) && git rev-parse HEAD)
+
 # Name, email and text for changelog entry
 CHANGELOG_NAME ?= "PackPack"
 CHANGELOG_EMAIL ?= "build@tarantool.org"

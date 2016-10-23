@@ -2,12 +2,19 @@
 # Packer for Debian packages
 #
 
+DEB_VERSION:=$(VERSION)
+ifneq ($(shell cd $(SOURCEDIR) && dpkg-parsechangelog|grep ^Version|grep -E "g[a-z0-9]{7}\-[0-9]+"),)
+# Add git hash to follow convention of official Debian packages
+DEB_VERSION := $(VERSION).g$(shell echo $(REVISION)|cut -c1-7)
+$(info Added git hash to Debian package version: $(VERSION) => $(DEB_VERSION))
+endif
+
 DPKG_ARCH:=$(shell dpkg --print-architecture)
-DPKG_CHANGES:=$(PRODUCT)_$(VERSION)-$(RELEASE)_$(DPKG_ARCH).changes
-DPKG_BUILD:=$(PRODUCT)_$(VERSION)-$(RELEASE)_$(DPKG_ARCH).build
-DPKG_DSC:=$(PRODUCT)_$(VERSION)-$(RELEASE).dsc
-DPKG_ORIG_TARBALL:=$(PRODUCT)_$(VERSION).orig.tar.$(TARBALL_COMPRESSOR)
-DPKG_DEBIAN_TARBALL:=$(PRODUCT)_$(VERSION)-$(RELEASE).debian.tar.$(TARBALL_COMPRESSOR)
+DPKG_CHANGES:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE)_$(DPKG_ARCH).changes
+DPKG_BUILD:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE)_$(DPKG_ARCH).build
+DPKG_DSC:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE).dsc
+DPKG_ORIG_TARBALL:=$(PRODUCT)_$(DEB_VERSION).orig.tar.$(TARBALL_COMPRESSOR)
+DPKG_DEBIAN_TARBALL:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE).debian.tar.$(TARBALL_COMPRESSOR)
 
 #
 # Prepare build directory
@@ -21,7 +28,7 @@ $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/: $(BUILDDIR)/$(TARBALL)
 	cp -pfR $(SOURCEDIR)/debian/ $(BUILDDIR)/$(PRODUCT)-$(VERSION)
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		NAME=$(CHANGELOG_NAME) DEBEMAIL=$(CHANGELOG_EMAIL) \
-		dch -b -v "$(VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
+		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
 
 #
 # Create a symlink for orig.tar.gz
