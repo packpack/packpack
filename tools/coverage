@@ -20,8 +20,8 @@ $(COVERAGE_INFO):
 		echo ""; \
 		exit 1; \
 	fi
-	lcov --directory src/ --capture --output-file $(abspath $@).tmp
-	lcov --remove $(abspath $@.tmp) 'tests/*' 'third_party/*' '/usr/*' \
+	lcov --compat-libtool --directory src/ --capture --output-file $(abspath $@).tmp
+	lcov --compat-libtool --remove $(abspath $@.tmp) 'tests/*' 'third_party/*' '/usr/*' \
 		--output-file $(abspath $@)
 	rm -f $@.tmp
 
@@ -47,7 +47,7 @@ upload: ${COVERAGE_INFO}
 	fi;
 	@echo "Exporting code coverage information to coveralls.io"i
 	@echo coveralls-lcov --repo-token [FILTERED] $(abspath $(COVERAGE_INFO))
-	@coveralls-lcov --repo-token ${COVERALLS_TOKEN} $(abspath $(COVERAGE_INFO))
+	@coveralls-lcov -v --repo-token $(COVERALLS_TOKEN) $(abspath $(COVERAGE_INFO))
 
 zerocounters:
 	@lcov --zerocounters -d src/
