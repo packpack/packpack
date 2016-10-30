@@ -1,0 +1,5 @@
+packpack (1.0.0-1) unstable; urgency=medium
+
+  * Initial release
+
+ -- Roman Tsisyk <roman@tarantool.org>  Sun, 30 Oct 2016 11:43:04 +0300

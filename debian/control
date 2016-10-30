@@ -1,0 +1,22 @@
+Source: packpack
+Priority: optional
+Section: vcs
+Maintainer: Roman Tsisyk <roman@tarantool.org>
+Standards-Version: 3.9.8
+Homepage: https://github.com/packpack/packpack
+Vcs-Git: git://github.com/packpack/packpack.git
+Vcs-Browser: https://github.com/packpack/packpack
+Build-Depends: debhelper (>= 9),
+               coreutils (>= 8), sed (>= 4.2), make (>= 3.81)
+
+Package: packpack
+Architecture: all
+Depends: dash, docker-engine (>= 1.5.0), ${misc:Depends}
+Description: Simple tool to build RPM and Debian packages from git repository.
+ PackPack is a simple tool to build RPM and Debian packages from
+ git repository using Docker:
+ .
+  * Fast reproducible builds using Docker containers
+  * Semantic versioning based on annotated git tags
+  * Support for all major Linux distributions as targets
+ .
