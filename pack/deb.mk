@@ -48,8 +48,8 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
 	## Clear APT cache to fix Hash sum mismatch
-	sudo apt-get clean
-	sudo rm -rf /var/lib/apt/lists/*
+	# sudo apt-get clean
+	# sudo rm -rf /var/lib/apt/lists/*
 	sudo apt-get update > /dev/null
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo mk-build-deps -i --tool "apt-get -y" || :
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo rm -f *build-deps_*.deb

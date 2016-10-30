@@ -1,31 +1,41 @@
 #
-# Packer for Debian packages
+# Packer for RPM packages
 #
 
-# Tarantool: don't use long paths to avoid "AF_UNIX path too long"
-RPMDIST=$(shell rpm -E "%{dist}")
-PKGVERSION=$(VERSION)-$(RELEASE)$(RPMDIST)
-RPMSPEC=$(PRODUCT).spec
-RPMSRC=$(PRODUCT)-$(PKGVERSION).src.rpm
+RPMSPECIN := $(wildcard rpm/*.spec *.spec)
+ifeq ($(RPMSPECIN),)
+$(error Can't find RPM spec in rpm/ directory)
+endif
+$(info Using $(RPMSPECIN) file)
 
-$(BUILDDIR)/$(RPMSPEC): rpm/$(RPMSPEC)
+RPMDIST := $(shell rpm -E "%{dist}")
+PKGVERSION := $(VERSION)-$(RELEASE)$(RPMDIST)
+RPMSPEC := $(PRODUCT).spec
+RPMSRC := $(PRODUCT)-$(PKGVERSION).src.rpm
+
+$(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
-	@echo "Preparing RPM spec"
+	@echo "Patching RPM spec"
 	@echo "-------------------------------------------------------------------"
 	@cp $< $@.tmp
-	sed -e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
-		 -e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
-		 -e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
-		 -e 's/%setup .*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
-		 -i $@.tmp
-	@grep -E "Version:|Release:|Source0|%setup" $@.tmp
-	@mv -f $@.tmp $@
+	sed \
+		-e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
+		-e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
+		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
+		-e 's/%setup .*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
+		-i $@.tmp
+	grep -F "Version: $(VERSION)" $@.tmp && \
+		grep -F "Release: $(RELEASE)" $@.tmp && \
+		grep -F "Source0: $(TARBALL)" $@.tmp && \
+		grep -F "%setup -q -n $(PRODUCT)-$(VERSION)" $@.tmp || \
+		(echo "Failed to patch RPM spec" && exit 1)
+	@ mv -f $@.tmp $@
 	@echo
 
 #
 # Build source RPM
 #
-$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(RPMSPEC) $(BUILDDIR)/$(TARBALL)
+$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(RPMSPEC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
@@ -44,7 +54,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
-	sudo yum clean all
+	# sudo yum clean all
 	sudo dnf builddep -y $< || sudo yum-builddep -y $<
 	@echo
 	@echo "-------------------------------------------------------------------"

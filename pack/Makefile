@@ -1,5 +1,3 @@
-#!/usr/bin/make -f
-
 all: package
 
 PACKDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
