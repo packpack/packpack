@@ -109,7 +109,7 @@ myproject$ git clone https://github.com/packpack/packpack.git packpack
 myproject$ OS=fedora DIST=24 ./packpack/packpack
 ```
 
-- Built artifacts will be stored to `build/` directory:
+- The build artifacts will be stored into `build/` directory:
 
 ```sh
 myproject$ ls -1s build/
@@ -127,7 +127,7 @@ curl -s https://packagecloud.io/install/repositories/packpack/packpack/script.de
 curl -s https://packagecloud.io/install/repositories/packpack/packpack/script.rpm.sh | sudo bash
 ```
 
-See [PackPack Repository] for additional instructions.
+See [PackPack Repositories] for additional instructions.
 
 ## How Does it Work
 
@@ -182,7 +182,7 @@ PackPack performs the following steps:
   + `PACKAGECLOD_USER=<username>` (public)
   + `PACKAGECLOUD_REPO=<reponame>` (public)
 
-![Travis CI Env][Travis CI Env]
+  [Click to see how][Travis CI Env].
 
 - Enable PackPack magic in `.travis.yml` file:
 
@@ -234,20 +234,19 @@ deploy:
 - Push changes to GitHub repository to trigger Travis CI build.
 
 - Check Travis CI logs and fix packaging problems, if any.
-
-![Travis CI Example][Travis CI Example]
+  [Click to see how][Travis CI Example].
 
 - Get packages on your [PackageCloud] repository.
-
-![PackageCloud Example][PackageCloud Example]
+  [Click to see how][PackageCloud example].
 
 - ???
+
+- **Star this project on GitHub** if you like this idea.
 
 - PROFIT
 
 That's it.
 
-**Don't forget to star this project on GitHub** if you like this manual.
 
 BTW, Travis CI [allow to exclude some builds from matrix][Travis CI Matrix],
 see an example in [tarantool/tarantool](Tarantool GitHub) repo.
@@ -276,7 +275,7 @@ See the full list of available options and detailed configuration guide in
 [pack/config.mk](pack/config.mk) configuration file.
 
 The actual list of distribution is available on [Docker Hub]
-(https://hub.docker.com/r/${DOCKER_REPO}/tags/).
+(https://hub.docker.com/r/packpack/packpack/tags/).
 
 ## Contribution
 
@@ -288,8 +287,7 @@ the simplest (and fastest) one.
 
 Please feel free to fork this repository for experiments.
 You may need to create your own repository on Docker Hub.
-
-![Docker Hub Example][Docker Hub Example]
+[Click to see how][Docker Hub Example].
 
 ## See Also
 
