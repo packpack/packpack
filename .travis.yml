@@ -1,0 +1,50 @@
+sudo: false
+language: Python
+services:
+  - docker
+
+env:
+    matrix:
+      - OS=el DIST=6
+      - OS=el DIST=7
+      - OS=fedora DIST=23
+      - OS=fedora DIST=24
+      - OS=ubuntu DIST=trusty
+      - OS=ubuntu DIST=precise
+      - OS=ubuntu DIST=wily
+      - OS=ubuntu DIST=xenial
+      - OS=debian DIST=jessie
+      - OS=debian DIST=wheezy
+      - OS=debian DIST=stretch
+
+script:
+ - git submodule update --init --recursive
+ - git describe --long
+
+before_deploy:
+ # Build packages using PackPack
+# - git clone https://github.com/packpack/packpack.git packpack
+# - packpack/packpack
+ - ./packpack
+
+deploy:
+  # Deploy packages to PackageCloud
+  provider: packagecloud
+  username: ${PACKAGECLOUD_USER}
+  repository: ${PACKAGECLOUD_REPO}
+  token: ${PACKAGECLOUD_TOKEN}
+  dist: ${OS}/${DIST}
+  package_glob: build/*.{deb,rpm}
+  skip_cleanup: true
+  on:
+    branch: master
+    condition: -n "${OS}" && -n "${DIST}" && -n "${PACKAGECLOUD_TOKEN}"
+
+# Prune old packages from PackageCloud (keep the two latest versions)
+after_deploy:
+ - pip install -r ./tools/requirements.txt
+ - python ./tools/packagecloud prune ${PACKAGECLOUD_USER}/${PACKAGECLOUD_REPO} deb ${OS} ${DIST} --keep 2
+ - python ./tools/packagecloud prune ${PACKAGECLOUD_USER}/${PACKAGECLOUD_REPO} rpm ${OS} ${DIST} --keep 2
+
+notifications:
+  email: true

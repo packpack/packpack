@@ -1,21 +1,42 @@
 #!/bin/sh
 
-# Defaults
-BUILD=1.0.0
-SOURCEDIR=$(pwd)
-BUILDDIR=${BUILDDIR:-${PWD}/build}
+# PackPack version
+PACKVERSION=1.0.0
+
+# Path to PackPack makefiles
 PACKDIR=$(cd $(dirname $0) && pwd)/pack
-DISTRO=${DISTRO:-ubuntu-xenial}
-DOCKER_REPO=${DOCKER_REPO:-tarantool/build}
+
+# Source directory
+SOURCEDIR=${PWD}
+
+# Build directory
+BUILDDIR=${BUILDDIR:-${SOURCEDIR}/build}
+
+# Docker repository to use
+DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
+
+# Docker image to use
+if [ -n "${OS}" ] && [ -n "${DIST}" ]; then
+    if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then
+        # Numeric dist, e.g. centos6 or fedora23
+        DOCKER_IMAGE="${OS}${DIST}"
+    else
+        # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
+        DOCKER_IMAGE="${OS}-${DIST}"
+    fi
+else
+    # Use ubuntu-xenial docker image if OS or DIST is invalid
+    DOCKER_IMAGE=ubuntu-xenial
+fi
 
 version() {
-    echo "Tarantool/Build ${BUILD}"
+    echo "PackPack version ${PACKVERSION}"
 }
 
 usage() {
-    echo "# Tarantool/Build ${BUILD}"
+    echo "# PackPack version ${PACKVERSION}"
     echo ""
-    echo "Usage: DISTRO=ubuntu-xenial $0 [TARGET..]"
+    echo "Usage: OS=ubuntu DIST=xenial $0 [TARGET..]"
     echo ""
     echo "## Available Targets"
     echo ""
@@ -27,7 +48,8 @@ usage() {
     echo "## Environment Variables"
     echo ""
     echo " * PRODUCT - the name of software product, e.g. 'tarantool'"
-    echo " * DISTRO - the name of distribution (${DISTRO})"
+    echo " * OS - the name of distribution, e.g. debian or fedora (${OS})"
+    echi " * DIST - the version of distrition, e.g. xenial or 24 (${DIST})"
     echo " * BUILDDIR - directory used for out-of-source build (${BUILDDIR})"
     echo " * DOCKER_REPO - Docker repository to use (${DOCKER_REPO})"
     echo ""
@@ -39,12 +61,12 @@ usage() {
     echo ""
     echo "## Documentation"
     echo ""
-    echo " * See https://github.com/tarantool/build"
+    echo " * See https://github.com/packpack/packpack"
     echo ""
 }
 
 case "$1" in
-    -v|--version)
+    -V|--version)
         version
         exit 0
     ;;
@@ -88,7 +110,7 @@ docker run \
         --entrypoint=/build/userwrapper.sh \
         -e CCACHE_DIR=/ccache \
         --volume "${HOME}/.cache:/ccache" \
-        ${DOCKER_REPO}:${DISTRO} \
+        ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j $@
 
 # vim: filetype=sh tabstop=4 shiftwidth=4 softtabstop=4 expandtab

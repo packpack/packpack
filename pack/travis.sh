@@ -165,19 +165,6 @@ fi
 
 [ -n "${PRODUCT}" ] || usage "Missing PRODUCT"
 
-if [ -n "${OS}" ] && [ -n "${DIST}" ]; then
-    if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then
-        # Numeric dist, e.g. centos6 or fedora23
-        DISTRO="${OS}${DIST}"
-    else
-        # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
-        DISTRO="${OS}-${DIST}"
-    fi
-else
-    # Set distro to ubuntu-xenial if OS or DIST is invalid
-    DISTRO=ubuntu-xenial
-fi
-
 GITVERSION=$(git describe --long --always)
 export VERSION=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1/p')
 export RELEASE=$(echo ${GITVERSION} | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\2/p')
@@ -194,7 +181,7 @@ echo "Product:          ${PRODUCT}"
 echo "Source:           ${GITVERSION}, branch ${BRANCH}"
 echo "Version:          ${VERSION}"
 echo "Release:          ${RELEASE}"
-echo "Target:           ${DISTRO}"
+echo "Target:           ${OS}-${DIST}"
 
 if [ -n "${FTP}" ]; then
     echo "FTP host:         ${FTP_HOST} (repo ${REPO_PREFIX})"
@@ -219,7 +206,7 @@ echo
 BUILDDIR=$(pwd)/build/root/
 mkdir -p ${BUILDDIR}
 
-export BUILDDIR DOCKER_REPO PRODUCT DISTRO VERSION RELEASE
+export BUILDDIR DOCKER_REPO PRODUCT OS DIST VERSION RELEASE
 
 if [ "${PACK}" == "rpm" ]; then
     if [ -f "rpm/${PRODUCT}.spec" ] ; then

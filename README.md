@@ -1,30 +1,190 @@
-# Cloud Build Infrastructure
+# PackPack
 
-Build DEB and RPM packages for your project using Docker (on Travis CI)
-and export results to [PackageCloud].
+[<img src="/doc/logo.png" align="right" width="180px" height="180px" />][PackPack]
 
-Just a minute from the push to packages!
+**PackPack** is a simple tool to build RPM and Debian packages from **git**
+repositories:
 
-## Prerequisites
+* Fast reproducible builds using Docker containers
 
-- Docker, GNU `make` and `bash` (or just use Travis CI)
-- [RPM] spec should be placed to `rpm/${myreponame}.spec` and
-  [Debian] rules to `debian/`, respectively:
-- For Mac OS X (macOS) support install 'gnu-tar', 'coreutils' and 'md5sha1sum'
-  packages with homebrew and Docker (dmg package from site)
+* Semantic versioning based on annotated git tags
 
-## Sanity checks
+* Support for all major Linux distributions as targets
+
+**PackPack** works best with [GitHub], [Travis CI] and [PackageCloud]:
+
+* Push your code to [GitHub]
+
+* Build packages using [Travis CI]
+
+* Host repositories on [PackageCloud]
+
+## Motivation
+
+**PackPack** is designed by folks from [Mail.Ru Group], a leading
+Internet company in Europe, to automate release management cycle of
+open source products as well as of proprietary software.
+
+**[Tarantool]**, an open-source general-purpose database and an application
+server, has dozens of git commits per day and this number is constantly
+increasing month after month. In order to deliver the best user experience
+and offer enterprise-level support quality, the Tarantool team packages
+almost every git commit from four git branches for (!) fifteen various
+Linux distribution.
+
+**Traditional tools**, like `mock` and `pbuilder`, were tremendously slow and
+ridiculously overcomplicated. Customers **had to wait hours** for hotfix
+packages and the project paid thousands of dollars annually for hardware and
+electricy bills. Such cost are unacceptable for the most "free as in speech"
+open-source projects.
+
+**PackPack** has reduced __push-to-package__ time **from hours to minutes**.
+Tarantool team were even able to package all complementary modules,
+addons and connectors using this tool. Tarantool users now can also package
+their own proprietary modules in the same manner as official packages.
+
+## Our Users
+
+* [Tarantool] - general-purpose database and Lua application server.
+* [IronSSH] - secure end-to-end file transfer software developed by
+  [IronCore Labs](https://ironcorelabs.com/).
+* [MINC Toolkit V2] - Medical Imaging NetCDF Toolkit developed by
+   [McConnell Brain Imaging Centre](https://www.mcgill.ca/bic/home).
+* [LuaFun] - functional programming library for Lua.
+* [MsgPuck] - simple and efficient MsgPack binary serialization library.
+* [Phalcon] - high performance PHP Framework.
+
+Of course, [PackPack] itself is packaged using [PackPack].
+
+## Supported Targets
+
+* Debian Wheezy / Jessie / Stretch / Sid
+* Ubuntu Precise / Trusty / Xenial / Yakkety
+* Fedora 23 / 24 / Rawhide
+* CentOS 6 / 7
+
+Please file an [issue][Issues] if you want more.
+
+## Getting Started
+
+- Install `git`, `docker` and any posix-compatible shell
+  (bash, dash, zsh, etc.).
+  The complicated one is Docker, please see the detailed guide on
+  [docs.docker.com web-site][Docker Installation Guide].
+
+- Add RPM `spec` to `rpm/` folder of your git repository. The best way to
+  create a new `spec` file for your product is to find an existing one for
+  a similar software, rename and then modify it. See [Fedora Git] and
+  [Fedora Packaging Guidelines] for details. Some examples are available
+  from [tarantool/modulekit][ModuleKit] repository.
+
+- Add `debian/` folder to your git repository, as usual. Debian has
+  complicated package structure and we strongly recommend to find a similar
+  package in the [official repositories][Debian Packages],
+  download it using `apt-get source package` command, copy and paste and
+  then modify `debian/` directory. Some examples are available from
+  [tarantool/modulekit][ModuleKit] repository.
+
+- Create an **annotated** `major.minor` git tag in your repository.
+  PackPack will automatically set `patch` level based on the commit number
+  from this tag in order to provide `major.minor.patch` semantic versioning:
+
 ```sh
-$ cd mypproject/
-myproject$ [ -f rpm/myproject.spec  ] && echo "RPM spec exists"
-RPM spec exists
-myproject$ [ -f debian/rules ] && echo "Debian rules exists"
-Debian rules exists
+$ git tag -a 1.0
+$ git describe --always --long
+1.0-0-g5c26e8b # major.minor-patch = 1.0-0
+$ git push origin 1.0:1.0 # Push to GitHub
 ```
 
-## Usage on Travis
+- Clone PackPack repository:
 
-Add to `.travis.yml`:
+```sh
+myproject$ git clone https://github.com/packpack/packpack.git packpack
+```
+
+- Try to build some packages for, say, Fedora 24. For the first time,
+  Docker will download images from Docker Hub, please wait a little bit.
+
+```sh
+myproject$ OS=fedora DIST=24 ./packpack/packpack
+```
+
+- Built artifacts will be stored to `build/` directory:
+
+```sh
+myproject$ ls -1s build/
+total 112
+76 myproject-1.0.2-0.fc24.src.rpm
+36 myproject-devel-1.0.2-0.fc24.x86_64.rpm
+```
+
+Of course, PackPack can also be installed from DEB/RPM packages:
+
+```sh
+# For Debian, Ubuntu and other Debian-based
+curl -s https://packagecloud.io/install/repositories/packpack/packpack/script.deb.sh | sudo bash
+# For Fedora, RedHat, CentOS and other RPM-based
+curl -s https://packagecloud.io/install/repositories/packpack/packpack/script.rpm.sh | sudo bash
+```
+
+See [PackPack Repository] for additional instructions.
+
+## How Does it Work
+
+PackPack performs the following steps:
+
+- A Docker container is started using `packpack/packpack:$OS$DIST` image.
+
+- The source repository is mounted to the container as a read-only volume.
+
+- `major.minor.patch` version is extracted from `git describe` output.
+
+- A source tarball (`product-major.minor.patch.tar.gz`) is packed from
+  files added to git repository.
+
+- For RPM package:
+
+  + `spec` file is copied from `rpm/`, `Version:` tag is updated
+     according to extracted `major.minor.patch` version, `%prep`
+     is updated to match the source tarball file name.
+  + A source RPM (`product-major.minor.patch-release.dist.src.rpm`) is
+    built from the source tarball using generated spec file.
+  + BuildRequires are installed using `dnf builddep` or `yum-builddep`.
+    Docker images already have a lot of packages pre-installed to speed up
+    the build.
+  + **rpmbuild** is started to build RPM packages from the source RPM.
+
+- For Debian packages:
+
+  + `debian/changelog` is bumped with extracted `major.minor.patch`
+    git version.
+  + Build-Depends are installed using `mk-build-deps` tool.
+    Docker images already have a lot of packages pre-installed to
+    speed up the build.
+  + A symlink for orig.tar.gz is created to the source tarball
+  + **dpkg-buildpackage** is started to build Debian packages.
+
+- Resulted packages, tarballs and log files are moved to `/build` volume,
+  which is mounted by default to `./build` directory of your git repository.
+
+## GitHub, Travis CI and PackageCloud
+
+**PackPack** is designed to use with [GitHub], [Travis CI] and [PackageCloud].
+
+- Register free [PackageCloud] account and create a repository.
+
+- Add your GitHub project to [Travis CI][Travis CI Integration].
+
+- Add the following environment variables
+  [to the project settings on Travis CI][Travis CI Environment]:
+
+  + `PACKAGECLOUD_TOKEN=<token>` (secret)
+  + `PACKAGECLOD_USER=<username>` (public)
+  + `PACKAGECLOUD_REPO=<reponame>` (public)
+
+![Travis CI Env][Travis CI Env]
+
+- Enable PackPack magic in `.travis.yml` file:
 
 ```yaml
 sudo: required
@@ -32,152 +192,150 @@ services:
   - docker
 
 cache: ccache
+language: C
 
 env:
     matrix:
-      - OS=centos DIST=6 PACK=rpm
-      - OS=centos DIST=7 PACK=rpm
-      - OS=fedora DIST=22 PACK=rpm
-      - OS=fedora DIST=23 PACK=rpm
-      - OS=fedora DIST=24 PACK=rpm
-      - OS=fedora DIST=rawhide PACK=rpm
-      - OS=ubuntu DIST=trusty PACK=deb
-      - OS=ubuntu DIST=precise PACK=deb
-      - OS=ubuntu DIST=wily PACK=deb
-      - OS=ubuntu DIST=xenial PACK=deb
-      - OS=ubuntu DIST=yakkety PACK=deb
-      - OS=debian DIST=jessie PACK=deb
-      - OS=debian DIST=wheezy PACK=deb
-      - OS=debian DIST=stretch PACK=deb
-      - OS=debian DIST=sid PACK=deb
-      - PACK=none
+      - OS=centos DIST=6
+      - OS=centos DIST=7
+      - OS=fedora DIST=23
+      - OS=fedora DIST=24
+      - OS=ubuntu DIST=trusty
+      - OS=ubuntu DIST=precise
+      - OS=ubuntu DIST=xenial
+      - OS=ubuntu DIST=yakkety
+      - OS=debian DIST=jessie
+      - OS=debian DIST=wheezy
+      - OS=debian DIST=stretch
 
 script:
-  - git clone https://github.com/tarantool/build.git
-  - ./build/pack/travis.sh
+ - git submodule update --init --recursive
+ - git describe --long
 
-notifications:
-  email: true
-  irc: false
+before_deploy:
+  # Build packages using PackPack
+ - git clone https://github.com/packpack/packpack.git packpack
+ - packpack/packpack
 
+deploy:
+  # Deploy packages to PackageCloud
+  provider: packagecloud
+  username: ${PACKAGECLOUD_USER}
+  repository: ${PACKAGECLOUD_REPO}
+  token: ${PACKAGECLOUD_TOKEN}
+  dist: ${OS}/${DIST}
+  package_glob: build/*.{deb,rpm}
+  skip_cleanup: true
+  on:
+    branch: master
+    condition: -n "${OS}" && -n "${DIST}" && -n "${PACKAGECLOUD_TOKEN}"
 ```
 
-Enable [Travis integration] and [Packagecloud integration] and then push
-changes to [GitHub].
+- Push changes to GitHub repository to trigger Travis CI build.
 
-N.B. Now we build packages only for master branch (or for stuff hardcoded in
-`build/travis/travis.sh`)
+- Check Travis CI logs and fix packaging problems, if any.
 
-### Available ENV variables:
+![Travis CI Example][Travis CI Example]
 
-* `OS` - target operating system (like `fedora` or `ubuntu`)
-* `DIST` - os distribution name or tag (like `21` or `precise`)
-* `PACK` - packager type [deb/rpm/none].
-* `PACKAGECLOUD_TOKEN` - a token for http://packagecloud.io/
-* `PACKAGECLOUD_REPO` - package cloud repository name (default is ```${username}/${branch}```)
+- Get packages on your [PackageCloud] repository.
 
-### Tests
+![PackageCloud Example][PackageCloud Example]
 
-If `PACK` is equal `none` - Travis run `test.sh` from project root
-(if file exists)
+- ???
 
-### Exclusion
+- PROFIT
 
-It's possible to exclude some builds from packaging:
-https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
+That's it.
 
-Example: https://github.com/tarantool/tarantool/blob/1.6/.travis.yml
+**Don't forget to star this project on GitHub** if you like this manual.
 
-## Local Usage
+BTW, Travis CI [allow to exclude some builds from matrix][Travis CI Matrix],
+see an example in [tarantool/tarantool](Tarantool GitHub) repo.
 
-Clone this repository:
+## Configuration
 
-    myproject$ git clone https://github.com/tarantool/build.git build
+**PackPack** can be configured via environment variables:
 
-Try to build some packages, say RPM packages for Fedora Rawhide:
+* `OS` - target operating system name, e.g. `fedora` or `ubuntu`
+* `DIST` - target distribution name, e.g `24` or `xenial`
+* `BUILDDIR` - a directory used to store intermediate files and resulted
+   packages (default is `./build`).
+* `PRODUCT` - the name of software product, used for source tarball and
+   source package, e.g. `tarantool`
+* `VERSION` - semantic version of the software, e.g. 2.4.35
+   (default is extracted for `git describe`).
+* `RELEASE` - the number of times this version of the software has been
+   packaged (default is 1).
+*  `TARBALL_COMPRESSOR` - a compression algorithm to use, e.g. gz, bz2, xz
+   (default is xz).
+* `CHANGELOG_NAME`, `CHANGELOG_EMAIL`, `CHANGELOG_TEXT` - information
+   used to bump version in changelog files.
+* `DOCKER_REPO` - a Docker repository to use (default is `packpack/packpack`).
 
-    myproject$ ./build/build PRODUCT=tarantool fedora-rawhide
+See the full list of available options and detailed configuration guide in
+[pack/config.mk](pack/config.mk) configuration file.
 
-Please wait a while for the first time until Docker downloads images from
-Docker Hub. It is possible to get into the cache all supported distros
-using `./build/build download` command.
+The actual list of distribution is available on [Docker Hub]
+(https://hub.docker.com/r/${DOCKER_REPO}/tags/).
 
-Generated RPM packages will be stored to `build/root/$OS-$PACK-$DIST/results/`
-folder:
+## Contribution
 
-    myproject$ ls -1s build/root/rpm-fedora-rawhide/results/
-    total 112
-    76 myproject-1.0.2-0.fc24.src.rpm
-    36 myproject-devel-1.0.2-0.fc24.x86_64.rpm
+**PackPack** is written on Makefiles and contains less than 300 lines of code.
+We've tried different variants, like Python, but GNU Make is actually
+the simplest (and fastest) one.
 
-### Targets
+**Any pull requests are welcome.**
 
-* `./build/build` without arguments starts packaging for all supported distros
-* `./build/build clean` - clean buildroot (./build/root/)
-* `./build/build tarball`
-* `./build/build ${OS}-${DIST}` - build packages for ${OS}-${DIST}, e.g.
-  debian-sid, fedora23 or centos7
-* `./build/build all` - build all packages
+Please feel free to fork this repository for experiments.
+You may need to create your own repository on Docker Hub.
 
-### Available ENV variables
+![Docker Hub Example][Docker Hub Example]
 
-* `PRODUCT` - project name used for source tarball and source package.
-* `VERSION` - a package version to use, e.g. 1.0.0 (defaults to git tag name)
-* `RELEASE` - a package release number, e.g. -155 (defaults to the commit
-   number from the last tag, see `git describe --long`)
-* `TARBALL` - tarball name (default is `${PRODUCT}-${VERSION}.tar.gz`)
-* `DEB_VERSION` - override the version only for DEB packages
-* `DEB_RELEASE` - override the release only for DEB packages
-* `RPM_VERSION` - override the version only for RPM packages
-* `RPM_RELEASE` - override the release only for RPM packages
-* `RPM_SPEC` - a relative path to RPM spec file (default is
-   `rpm/${PRODUCT}.spec`)
+## See Also
 
-## Parallelism
+Please feel free to contact us if you need some help:
 
-`./build/build` is a regular `Makefile`, so it fully supports [parallel
-execution] provided by GNU `make`. The command below executes packaging for
-`xenial` and `willy` at once:
+* [Email](mailto:roman@tarantool.org)
+* [Google Groups](mailto:tarantool@googlegroups.com)
+* [Telegram Channel](http://telegram.me/tarantool)
+* [GitHub Issues][Issues]
+* [Twitter](https://twitter.com/rtsisyk)
 
-    ./build/build PRODUCT=tarantool ubuntu-xenial ubuntu-willy -j2
+**PackPack** can be installed as a regular system tool from RPM/DEB packages.
 
-It is also possible to build packages for supported distors in parallel:
+Check out [PackPack Repositories] on [PackageCloud].
 
-    ./build/build PRODUCT=tarantool -j
+--------------------------------------------------------------------------------
 
-Please refer to GNU `make` [documentation](parallel execution) for additional
-information.
+Please **"Star"** this project on GitHub to help it to survive! Thanks!
 
-[parallel execution]: https://www.gnu.org/software/make/manual/html_node/Parallel.html
-
-`dpkg-buildpackage` and `rpmbuild` themself also utilize multiple cores
-inside of Docker containers. Please control the number of cores used by
-the host `make` carefully.
-
-### Customizing
-
-To override some `make` variables create a file named `.build.mk` in the root
-of your repository. `./build/build` tries to include this file
-before executing any rules. An example of `.build.mk`:
-
-```
-# Override version
-VERSION=$(shell cat VERSION | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
-RELEASE=1
-```
-
-It is also possible to override variables for specific product by placing
-the same file to `./product.d/$(PRODUCT)` in this repository.
-
-See Also
---------
-
-* [Tarantool](http://github.com/tarantool/tarantool)
-* Tarantool Repositories on [PackageCloud](https://packagecloud.io/tarantool/1_6)
-
+[PackPack]: https://github.com/packpack/packpack
+[GitHub]: https://github.com/
 [PackageCloud]: https://packagecloud.io/
+[Tarantool]: https://tarantool.org/
+[Tarantool GitHub]: https://github.com/tarantool/tarantool
+[Mail.Ru Group]: https://corp.mail.ru/en/
+[IronSSH]: https://github.com/IronCoreLabs/ironssh
+[Phalcon]: https://github.com/phalcongelist/packagecloud
+[MINC Toolkit v2]: https://github.com/gdevenyi/minc-toolkit-v2
+[LuaFun]: https://github.com/rtsisyk/luafun
+[MsgPuck]: https://github.com/rtsisyk/msgpuck
+[Docker Installation Guide]: https://docs.docker.com/engine/installation/
+[Fedora Git]: http://pkgs.fedoraproject.org/cgit/rpms/
+[Fedora Packaging Guidelines]: https://fedoraproject.org/wiki/Packaging:Guidelines
+[Debian Packages]: http://packages.debian.org/
+[ModuleKit]: https://github.com/tarantool/modulekit
+[Travis CI]: https://travis-ci.org/
+[Travis CI Integration]: https://docs.travis-ci.com/user/getting-started/
+[Travis CI Environment]: https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings
+[Travis CI Matrix]: https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
+[Issues]: https://github.com/packpack/packpack/issues
 [RPM]: https://github.com/tarantool/modulekit/tree/master/rpm
 [Debian]: https://github.com/tarantool/modulekit/tree/master/debian
-[GitHub]: https://github.com/
-[Travis Integration]: https://docs.travis-ci.com/user/getting-started/
 [PackageCloud Integration]: https://packagecloud.io/docs#travis
+[Docker Hub Example]: /doc/dockerhub.png
+[Travis CI Env]: /doc/travisenv.png
+[Travis CI Example]: /doc/travis.png
+[PackageCloud Example]: /doc/packagecloud.png
+[Tarantool Download]: https://tarantool.org/download.html
+[PackPack Repositories]: https://packagecloud.io/packpack/packpack/install
