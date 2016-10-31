@@ -81,14 +81,14 @@ esac
 # Create an entry point for Docker to allow builds from non-root user
 #
 mkdir -p ${BUILDDIR}
-echo -e \
-    "#!/bin/sh\n"\
-    "sudo useradd -u $(id -u) $USER\n"\
-    "sudo usermod -a -G sudo $USER 2>/dev/null || true\n"\
-    "sudo usermod -a -G wheel $USER 2>/dev/null || true\n"\
-    "sudo usermod -a -G adm $USER 2>/dev/null || true\n"\
-    "sudo -E -u $USER \$@\n"\
-    > ${BUILDDIR}/userwrapper.sh
+(
+echo "#!/bin/sh";
+echo "sudo useradd -u $(id -u) $USER";
+echo "sudo usermod -a -G sudo $USER 2>/dev/null || :";
+echo "sudo usermod -a -G wheel $USER 2>/dev/null || :";
+echo "sudo usermod -a -G adm $USER 2>/dev/null || :";
+echo "sudo -E -u $USER \$@";
+) > ${BUILDDIR}/userwrapper.sh
 chmod a+x ${BUILDDIR}/userwrapper.sh
 
 #
