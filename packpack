@@ -97,6 +97,13 @@ chmod a+x ${BUILDDIR}/userwrapper.sh
 env | grep -E "PRODUCT|VERSION|RELEASE|TARBALL_|CHANGELOG_" > ${BUILDDIR}/env
 
 #
+# Fix security context for selinux
+#
+
+chcon -Rt svirt_sandbox_file_t ${PACKDIR} ${SOURCEDIR} ${BUILDDIR} \
+    1> /dev/null 2> /dev/null || :
+
+#
 # Start Docker
 #
 set -ex

@@ -27,6 +27,11 @@ Requires: docker >= 1.5
 %install
 %make_install
 
+%post
+# Fix security context for SELinux
+# http://stackoverflow.com/questions/24288616/permission-denied-on-accessing-host-directory-in-docker
+chcon -Rt svirt_sandbox_file_t %{_datarootdir}/packpack/ || :
+
 %files
 %{_bindir}/packpack
 %{_datarootdir}/packpack/*
