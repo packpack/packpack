@@ -1,5 +1,11 @@
 # PackPack
 
+[![Travis][travis-badge]][travis-url]
+[![License][license-badge]][license-url]
+[![RPM Packages][rpm-badge]][rpm-url]
+[![Debian Packages][deb-badge]][deb-url]
+[![Demo Video][demo-badge]][demo-url]
+
 [<img src="/doc/logo.png" align="right" width="180px" height="180px" />][PackPack]
 
 **PackPack** is a simple tool to build RPM and Debian packages from **git**
@@ -18,6 +24,8 @@ repositories:
 * Build packages using [Travis CI]
 
 * Host repositories on [PackageCloud]
+
+[Watch a demonstration][demo-url] of PackPack.
 
 ## Motivation
 
@@ -291,6 +299,7 @@ You may need to create your own repository on Docker Hub.
 
 ## See Also
 
+[Watch a demonstration][demo-url] of PackPack.
 Please feel free to contact us if you need some help:
 
 * [Email](mailto:roman@tarantool.org)
@@ -306,6 +315,17 @@ Check out [PackPack Repositories] on [PackageCloud].
 --------------------------------------------------------------------------------
 
 Please **"Star"** this project on GitHub to help it to survive! Thanks!
+
+[travis-badge]: https://travis-ci.org/packpack/packpack.svg?branch=master
+[travis-url]: https://travis-ci.org/packpack/packpack
+[license-badge]: https://img.shields.io/badge/License-BSD--2-orange.svg?style=flat
+[license-url]: LICENSE
+[deb-badge]: https://img.shields.io/badge/Packages-Debian-red.svg?style=flat
+[deb-url]: https://packagecloud.io/packpack/packpack?filter=debs
+[rpm-badge]: https://img.shields.io/badge/Packages-RPM-blue.svg?style=flat
+[rpm-url]: https://packagecloud.io/packpack/packpack?filter=rpms
+[demo-badge]: https://img.shields.io/badge/Video-Demo-lightgrey.svg?style=flat
+[demo-url]: https://asciinema.org/a/3unm4sw4g889ddk7tr0uettbn
 
 [PackPack]: https://github.com/packpack/packpack
 [GitHub]: https://github.com/
