@@ -116,7 +116,7 @@ docker run \
         --rm=true \
         --entrypoint=/build/userwrapper.sh \
         -e CCACHE_DIR=/ccache \
-        --volume "${HOME}/.cache:/ccache" \
+        --volume "${HOME}/.ccache:/ccache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j $@
 
