@@ -49,7 +49,7 @@ usage() {
     echo ""
     echo " * PRODUCT - the name of software product, e.g. 'tarantool'"
     echo " * OS - the name of distribution, e.g. debian or fedora (${OS})"
-    echo " * DIST - the version of distrition, e.g. xenial or 24 (${DIST})"
+    echo " * DIST - the version of distribution, e.g. xenial or 24 (${DIST})"
     echo " * BUILDDIR - directory used for out-of-source build (${BUILDDIR})"
     echo " * DOCKER_REPO - Docker repository to use (${DOCKER_REPO})"
     echo ""
