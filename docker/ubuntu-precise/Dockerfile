@@ -6,11 +6,12 @@ ADD preferences /etc/apt/preferences
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo
+    sudo software-properties-common
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 
+RUN apt-add-repository -y ppa:george-edison55/precise-backports
 RUN apt-get update && apt-get install -y \
     cmake libreadline-dev libyaml-dev binutils-dev zlib1g-dev libssl-dev \
     doxygen

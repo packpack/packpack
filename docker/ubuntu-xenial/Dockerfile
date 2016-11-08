@@ -4,12 +4,13 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo systemd
+    sudo systemd software-properties-common
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 
 # Install dependencies to speed up builds
+RUN apt-add-repository -y ppa:george-edison55/cmake-3.x
 RUN apt-get update && apt-get install -y \
     cmake libreadline-dev libyaml-dev binutils-dev zlib1g-dev libssl-dev \
     doxygen
