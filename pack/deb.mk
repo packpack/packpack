@@ -16,6 +16,9 @@ DPKG_DSC:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE).dsc
 DPKG_ORIG_TARBALL:=$(PRODUCT)_$(DEB_VERSION).orig.tar.$(TARBALL_COMPRESSOR)
 DPKG_DEBIAN_TARBALL:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE).debian.tar.$(TARBALL_COMPRESSOR)
 
+# gh-7: Ubuntu/Debian should export DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND=noninteractive
+
 #
 # Prepare build directory
 #
