@@ -87,7 +87,7 @@ echo "sudo useradd -u $(id -u) $USER";
 echo "sudo usermod -a -G sudo $USER 2>/dev/null || :";
 echo "sudo usermod -a -G wheel $USER 2>/dev/null || :";
 echo "sudo usermod -a -G adm $USER 2>/dev/null || :";
-echo "sudo -E -u $USER \$@";
+echo "sudo -E -H -u $USER \$@";
 ) > ${BUILDDIR}/userwrapper.sh
 chmod a+x ${BUILDDIR}/userwrapper.sh
 
