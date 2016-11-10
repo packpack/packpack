@@ -41,7 +41,7 @@ $(BUILDDIR)/$(TARBALL): $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
 		--transform="s,,$(PRODUCT)-$(VERSION)/,S" \
 		--owner=root --group=root \
 		-T $< --show-transformed \
-		-cavPf $@ $(BUILDDIR)/VERSION $(TARBALL_EXTRA_FILES)
+		-caPf $@ $(BUILDDIR)/VERSION $(TARBALL_EXTRA_FILES)
 	@echo "------------------------------------------------------------------"
 	@echo "Tarball is ready"
 	@echo "-------------------------------------------------------------------"
