@@ -100,7 +100,7 @@ env | grep -E "PRODUCT|VERSION|RELEASE|TARBALL_|CHANGELOG_" > ${BUILDDIR}/env
 # Setup cache directory
 #
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/packpack"
-mkdir -p "${CACHE_DIR}"
+mkdir -p "${CACHE_DIR}/ccache"
 
 #
 # Fix security context for selinux
@@ -122,7 +122,7 @@ docker run \
         --entrypoint=/build/userwrapper.sh \
         -e XDG_CACHE_HOME=/cache \
         -e CCACHE_DIR=/cache/ccache \
-        --volume "${HOME}/.cache:/ccache" \
+        --volume "${CACHE_DIR}:/cache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j $@
 

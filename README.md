@@ -199,7 +199,10 @@ sudo: required
 services:
   - docker
 
-cache: ccache
+cache:
+    directories:
+     - $HOME/.cache
+
 language: C
 
 env:
