@@ -63,7 +63,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
 	rm -rf $(BUILDDIR)/tarball
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		debuild -Z$(TARBALL_COMPRESSOR) -uc -us $(SMPFLAGS) \
-		--preserve-envvar=CCACHE_DIR --prepend-path=/usr/lib/ccache
+		--preserve-envvar CCACHE_DIR --prepend-path=/usr/lib/ccache
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 	@echo "------------------------------------------------------------------"
 	@echo "Debian packages are ready"
