@@ -1,8 +1,13 @@
 FROM debian:jessie
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
+# Enable backports
 ADD backports.list /etc/apt/sources.list.d/
 ADD preferences /etc/apt/preferences
+
+# Don't install recommends
+RUN echo 'apt::install-recommends "false";' > /etc/apt/apt.conf.d/00recommends
+
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \

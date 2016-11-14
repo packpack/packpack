@@ -1,6 +1,9 @@
 FROM debian:stretch
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
+# Don't install recommends
+RUN echo 'apt::install-recommends "false";' > /etc/apt/apt.conf.d/00recommends
+
 # Bug#813000: apt complains about corrupted index files even after multiple updates
 RUN echo 'APT::Compressor::lz4::Cost "5000";' > /etc/apt/apt.conf.d/disable-lz4
 RUN apt-get update && apt-get install -y --force-yes \

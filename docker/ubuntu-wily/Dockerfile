@@ -1,6 +1,9 @@
 FROM ubuntu:wily
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
+# Don't install recommends
+RUN echo 'apt::install-recommends "false";' > /etc/apt/apt.conf.d/00recommends
+
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
