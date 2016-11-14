@@ -126,5 +126,7 @@ docker run \
         --volume "${CACHE_DIR}:/cache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j $@
-
+retcode=$?
+rm -f ${BUILDDIR}/userwrapper.sh ${BUILDDIR}/env
+exit $retcode
 # vim: filetype=sh tabstop=4 shiftwidth=4 softtabstop=4 expandtab
