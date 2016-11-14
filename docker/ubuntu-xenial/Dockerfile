@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y luajit \
     lua5.1 liblua5.1-dev lua5.2 liblua5.2-dev lua5.3 liblua5.3-dev dh-lua
 RUN curl -L https://packagecloud.io/tarantool/1_6/gpgkey | sudo apt-key add -
+RUN curl -s -O archive.ubuntu.com/ubuntu/pool/main/c/ccache/ccache_3.3.3-1_amd64.deb \
+    && dpkg -i ccache_3.3.3-1_amd64.deb && rm ccache_3.3.3-1_amd64.deb
 RUN apt-get update && apt-get install -y apt-transport-https
 ADD tarantool_1_6.list /etc/apt/sources.list.d/
 RUN apt-get update
