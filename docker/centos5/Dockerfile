@@ -11,13 +11,13 @@ RUN rpm -Uvh pgdg-redhat91-9.1-7.noarch.rpm
 RUN yum -y install devtoolset-2-toolchain
 RUN yum -y install devtoolset-2-binutils-devel
 RUN yum -y install yum-utils rpm-build rpmdevtools openssl-devel postgresql91-devel mysql-devel
-RUN yum -y install sudo vim wget mc git
+RUN yum -y install sudo wget git ccache
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
 
 RUN echo "source /opt/rh/devtoolset-2/enable" > /etc/profile.d/devtoolset-2.sh
 # Needed for rpmbuild
-ENV CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
-ENV CXX=/opt/rh/devtoolset-2//root/usr/bin/g++
+ENV CC="ccache /opt/rh/devtoolset-2/root/usr/bin/gcc"
+ENV CXX="ccache /opt/rh/devtoolset-2//root/usr/bin/g++"
 
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 # Fix paths for mock
