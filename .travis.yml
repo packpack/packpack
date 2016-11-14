@@ -20,11 +20,6 @@ env:
 script:
  - git submodule update --init --recursive
  - git describe --long
-
-before_deploy:
- # Build packages using PackPack
-# - git clone https://github.com/packpack/packpack.git packpack
-# - packpack/packpack
  - ./packpack
 
 deploy:
