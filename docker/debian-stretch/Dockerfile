@@ -9,7 +9,7 @@ RUN echo 'APT::Compressor::lz4::Cost "5000";' > /etc/apt/apt.conf.d/disable-lz4
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
     devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo curl dh-systemd gpg
+    sudo curl dh-systemd gpg ca-certificates
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
