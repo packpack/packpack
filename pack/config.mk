@@ -78,4 +78,4 @@ ifneq ($(TRAVIS),)
 # Travis instances are limited to "2 cpus, bursted"
 SMPFLAGS ?= -j2
 endif
-SMPFLAGS ?= -j16
+SMPFLAGS ?= -j$(shell nproc)
