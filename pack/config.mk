@@ -70,7 +70,12 @@ TARBALL_COMPRESSOR ?= xz
 #
 # Specifies the number of GNU make jobs (commands) to run simultaneously.
 #
+ifneq (,$(shell grep wheezy /etc/os-release 2> /dev/null))
 # Debian Wheezy fails to build tarantool/tarantool and msgpuck with "-j"
-ifeq (,$(shell grep wheezy /etc/os-release 2> /dev/null))
-SMPFLAGS ?= -j16
+SMPFLAGS ?= -j1
 endif
+ifneq ($(TRAVIS),)
+# Travis instances are limited to "2 cpus, bursted"
+SMPFLAGS ?= -j2
+endif
+SMPFLAGS ?= -j16

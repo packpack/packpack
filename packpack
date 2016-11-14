@@ -94,7 +94,8 @@ chmod a+x ${BUILDDIR}/userwrapper.sh
 #
 # Save defined configuration variables to ./env file
 #
-env | grep -E "PRODUCT|VERSION|RELEASE|TARBALL_|CHANGELOG_" > ${BUILDDIR}/env
+env | grep -E "TRAVIS|PRODUCT|VERSION|RELEASE|TARBALL_|CHANGELOG_" \
+    > ${BUILDDIR}/env
 
 #
 # Setup cache directory
