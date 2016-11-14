@@ -223,7 +223,7 @@ script:
  - git submodule update --init --recursive
  - git describe --long
  - git clone https://github.com/packpack/packpack.git packpack
- - packpack/packpack
+ - travis_wait 50 packpack/packpack
 
 deploy:
   # Deploy packages to PackageCloud
