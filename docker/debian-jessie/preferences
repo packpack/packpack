@@ -1,3 +1,7 @@
 Package: *
 Pin: release a=jessie-backports
 Pin-Priority: 100
+
+Package: cmake cmake-data
+Pin: release a=jessie-backports
+Pin-Priority: 800
