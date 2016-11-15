@@ -1,6 +1,11 @@
 FROM centos:6
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
+# Fix missing locales
+ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
+# Enable ccache and fix paths for mock
+ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
+
 # http://people.centos.org/tru/devtools-1.1/readme
 RUN curl -L http://people.centos.org/tru/devtools-2/devtools-2.repo > /etc/yum.repos.d/devtools-2.repo
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
@@ -20,10 +25,6 @@ RUN ln -s /opt/rh/devtoolset-2/root/usr/bin/gcc /usr/bin/gcc
 RUN ln -s /usr/bin/gcc /usr/bin/cc
 RUN ln -s /opt/rh/devtoolset-2/root/usr/bin/g++ /usr/bin/g++
 RUN ln -s /usr/bin/g++ /usr/bin/c++
-
-ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
-# Fix paths for mock
-ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
 RUN yum -y install cmake cmake28 cmake3 readline-devel libyaml-devel binutils-devel \

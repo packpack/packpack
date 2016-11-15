@@ -1,16 +1,16 @@
 FROM centos:7
-# A container used to build CentOS packages and develop Tarantool
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
+
+# Fix missing locales
+ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
+# Enable ccache and fix paths for mock
+ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum -y groupinstall "Development Tools"
 RUN yum -y install yum-utils rpm-build rpmdevtools
 RUN yum -y install sudo wget git ccache
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
-
-ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
-# Fix paths for mock
-ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
 # Install dependencies to speed up builds
 RUN yum -y install cmake cmake3 readline-devel libyaml-devel binutils-devel \
