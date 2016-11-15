@@ -278,6 +278,7 @@ see an example in [tarantool/tarantool](Tarantool GitHub) repo.
 * `CHANGELOG_NAME`, `CHANGELOG_EMAIL`, `CHANGELOG_TEXT` - information
    used to bump version in changelog files.
 * `DOCKER_REPO` - a Docker repository to use (default is `packpack/packpack`).
+* `CCACHE*` - Config variables for ccache, such as CCACHE_DISABLE
 
 See the full list of available options and detailed configuration guide in
 [pack/config.mk](pack/config.mk) configuration file.
