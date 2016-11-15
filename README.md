@@ -207,8 +207,8 @@ language: C
 
 env:
     matrix:
-      - OS=centos DIST=6
-      - OS=centos DIST=7
+      - OS=el DIST=6
+      - OS=el DIST=7
       - OS=fedora DIST=23
       - OS=fedora DIST=24
       - OS=ubuntu DIST=trusty
