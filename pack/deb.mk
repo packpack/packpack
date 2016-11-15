@@ -54,7 +54,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
 	# sudo apt-get clean
 	# sudo rm -rf /var/lib/apt/lists/*
 	sudo apt-get update > /dev/null
-	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo mk-build-deps -i --tool "apt-get -y" || :
+	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" || :
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo rm -f *build-deps_*.deb
 	@echo
 	@echo "-------------------------------------------------------------------"
