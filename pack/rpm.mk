@@ -67,7 +67,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_srcrpmdir $(BUILDDIR)' \
 		--define '_builddir $(BUILDDIR)' \
 		--define '_smp_mflags $(SMPFLAGS)' \
-		--rebuild --with backtrace $< 2>&1 | tee $(BUILDDIR)/build.log
+		--rebuild --with backtrace $< 2>&1 >>$(BUILDDIR)/build.log | tee --append $(BUILDDIR)/build.log
 	mv -f $(BUILDDIR)/RPMS/*/*.rpm $(BUILDDIR)
 	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT
 	@echo "------------------------------------------------------------------"

@@ -20,7 +20,7 @@ env:
 script:
  - git submodule update --init --recursive
  - git describe --long
- - ./packpack
+ - travis_wait ./packpack
 
 deploy:
   # Deploy packages to PackageCloud
