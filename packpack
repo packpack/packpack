@@ -119,7 +119,7 @@ docker run \
         --volume "${BUILDDIR}:/build" \
         --env-file ${BUILDDIR}/env \
         --workdir /source \
-        --rm=true \
+        --rm=true --tty=true \
         --entrypoint=/build/userwrapper.sh \
         -e XDG_CACHE_HOME=/cache \
         -e CCACHE_DIR=/cache/ccache \
