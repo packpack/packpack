@@ -103,7 +103,7 @@ if [ "${OS}" == "el" ]; then
 fi
 
 [ -n "${DIST}" ] || [ "$PACK" == "source"  ] || usage "Missing DIST"
-[ -x ${SCRIPTDIR}/build.sh ] || usage "Missing ./build.sh"
+[ -x ${SCRIPTDIR}/packpack ] || usage "Missing ./packpack"
 
 if [ -n "${TRAVIS_REPO_SLUG}" ]; then
     echo "Travis CI detected"
@@ -211,7 +211,7 @@ export BUILDDIR DOCKER_REPO PRODUCT OS DIST VERSION RELEASE
 if [ "${PACK}" == "rpm" ]; then
     if [ -f "rpm/${PRODUCT}.spec" ] ; then
         echo "Building RPM package from rpm/${PRODUCT}.spec"
-        ${SCRIPTDIR}/build.sh
+        ${SCRIPTDIR}/packpack
     else
         echo "Can't find RPM spec"
         exit 1
@@ -219,10 +219,10 @@ if [ "${PACK}" == "rpm" ]; then
 elif [ "${PACK}" == "deb" ]; then
     if [ -d "debian/" ]; then
         echo "Building Debian package from debian/"
-        ${SCRIPTDIR}/build.sh
+        ${SCRIPTDIR}/packpack
     fi
 elif [ "${PACK}" == "source" ]; then
-    TARBALL_COMPRESSOR=gz ${SCRIPTDIR}/build.sh tarball
+    TARBALL_COMPRESSOR=gz ${SCRIPTDIR}/packpack tarball
 else
     usage "Invalid PACK value"
 fi
