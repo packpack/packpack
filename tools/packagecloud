@@ -85,7 +85,7 @@ class PackageCloud():
                 continue
             versions = self.apiget(package['versions_url'], params)
             versions = sorted(versions, key=lambda v: v['created_at'])
-            if keep >= 0:
+            if keep > 0:
                 versions = versions[0:-keep]
             for version in versions:
                 pkgpath = repo + '/' + version['distro_version'] + \
