@@ -137,7 +137,7 @@ curl -s https://packagecloud.io/install/repositories/packpack/packpack/script.rp
 
 See [PackPack Repositories] for additional instructions.
 
-## How Does it Work
+## How it Works
 
 PackPack performs the following steps:
 
