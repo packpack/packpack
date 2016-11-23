@@ -68,7 +68,7 @@ Of course, [PackPack] itself is packaged using [PackPack].
 
 * Debian Wheezy / Jessie / Stretch / Sid
 * Ubuntu Precise / Trusty / Xenial / Yakkety
-* Fedora 23 / 24 / Rawhide
+* Fedora 23 / 24 / 25 / Rawhide
 * CentOS 6 / 7
 
 Please file an [issue][Issues] if you want more.
@@ -211,6 +211,7 @@ env:
       - OS=el DIST=7
       - OS=fedora DIST=23
       - OS=fedora DIST=24
+      - OS=fedora DIST=25
       - OS=ubuntu DIST=trusty
       - OS=ubuntu DIST=precise
       - OS=ubuntu DIST=xenial
