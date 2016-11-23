@@ -2,7 +2,7 @@ FROM centos:5.11
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
 # Fix missing locales
-ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
+ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 # Enable ccache and fix paths for mock
 ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
