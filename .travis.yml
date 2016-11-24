@@ -19,8 +19,8 @@ env:
 
 script:
  - git submodule update --init --recursive
- - git fetch --tags
- - git describe --long
+ - git fetch -a
+ - git describe --long --always
  - ./packpack
 
 deploy:
