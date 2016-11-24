@@ -44,6 +44,7 @@ $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(RPMSPEC)
 		--define '_sourcedir $(BUILDDIR)' \
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
+		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		-bs $(BUILDDIR)/$(RPMSPEC)
 prepare: $(BUILDDIR)/$(RPMSRC)
 
@@ -65,11 +66,11 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_sourcedir $(BUILDDIR)' \
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
-		--define '_builddir $(BUILDDIR)' \
+		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		--define '_smp_mflags $(SMPFLAGS)' \
 		--rebuild --with backtrace $< 2>&1 | tee $(BUILDDIR)/build.log
 	mv -f $(BUILDDIR)/RPMS/*/*.rpm $(BUILDDIR)
-	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT
+	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT $(BUILDDIR)/usr
 	@echo "------------------------------------------------------------------"
 	@echo "RPM packages are ready"
 	@echo "-------------------------------------------------------------------"
