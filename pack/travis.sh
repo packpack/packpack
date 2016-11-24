@@ -10,7 +10,7 @@ SCRIPT=$($READLINK $0)
 SCRIPTDIR=$($READLINK $(dirname ${SCRIPT})/../)
 
 ENABLED_BRANCHES="${ENABLED_BRANCHES:-master 1.6 1.7}"
-DOCKER_REPO="tarantool/build"
+DOCKER_REPO="packpack/packpack"
 
 usage() {
     echo "$1"
