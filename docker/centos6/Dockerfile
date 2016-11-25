@@ -4,11 +4,23 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 # Fix missing locales
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 
-# Install base toolset
+# Enable extra repositories
 RUN yum -y install epel-release centos-release-scl centos-release-scl-rh
-RUN yum -y install devtoolset-4-toolchain devtoolset-4-binutils-devel \
-                   sudo wget git ccache \
-                   yum-utils rpm-build rpmdevtools
+ADD tarantool_1_6.repo /etc/yum.repos.d/
+RUN yum -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'
+RUN yum -y install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+
+# Install base toolset
+RUN yum -y install \
+    devtoolset-4-toolchain devtoolset-4-binutils-devel \
+    sudo \
+    git \
+    wget \
+    curl \
+    ccache \
+    yum-utils \
+    rpm-build \
+    rpmdevtools
 
 # Fix ccache installation with devtoolset
 RUN ln -s ../../bin/ccache /usr/lib64/ccache/cc && \
@@ -31,7 +43,6 @@ ENV XDG_DATA_DIRS=/opt/rh/devtoolset-4/root/usr/share:/usr/local/share:/usr/shar
 RUN rm -f /opt/rh/devtoolset-4/root/usr/bin/sudo
 
 # Install dependencies to speed up builds
-RUN yum -y install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6-x86_64/pgdg-centos96-9.6-3.noarch.rpm
 RUN yum -y install \
     cmake cmake28 cmake3 \
     openssl-devel \
@@ -57,6 +68,3 @@ RUN pip install argparse
 # Install gevent-1.0.1
 ADD python-gevent-1.0.1-1.x86_64.rpm /tmp/
 RUN yum -y install /tmp/python-gevent-1.0.1-1.x86_64.rpm
-# Enable Tarantool repo
-ADD tarantool_1_6.repo /etc/yum.repos.d/
-RUN yum -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'
