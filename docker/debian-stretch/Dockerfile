@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     apt-transport-https \
     curl \
     wget \
-    gpgv \
+    gnupg \
     ca-certificates
 #ADD backports.list /etc/apt/sources.list.d/
 #ADD preferences /etc/apt/preferences.d/
