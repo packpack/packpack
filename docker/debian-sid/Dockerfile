@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN echo 'apt::install-recommends "false";' > /etc/apt/apt.conf.d/00recommends
 
 # Enable extra repositories
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --force-yes \
     apt-transport-https \
     curl \
     wget \
@@ -45,7 +45,7 @@ RUN apt-get update && apt-get install -y --force-yes \
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Install dependencies to speed up builds
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --force-yes \
     cmake \
     libssl-dev \
     zlib1g-dev \

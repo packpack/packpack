@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN echo 'apt::install-recommends "false";' > /etc/apt/apt.conf.d/00recommends
 
 # Enable extra repositories
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --force-yes \
     apt-transport-https \
     curl \
     wget \
@@ -19,8 +19,8 @@ RUN apt-get update && apt-get install -y \
     ca-certificates
 #ADD backports.list /etc/apt/sources.list.d/
 #ADD preferences /etc/apt/preferences.d/
-#RUN curl -L https://packagecloud.io/packpack/backports/gpgkey | apt-key add -
-#ADD packpack_backports.list /etc/apt/sources.list.d/
+RUN curl -L https://packagecloud.io/packpack/backports/gpgkey | apt-key add -
+ADD packpack_backports.list /etc/apt/sources.list.d/
 RUN curl -L https://packagecloud.io/tarantool/1_6/gpgkey | apt-key add -
 ADD tarantool_1_6.list /etc/apt/sources.list.d/
 
@@ -45,7 +45,7 @@ RUN apt-get update && apt-get install -y --force-yes \
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Install dependencies to speed up builds
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --force-yes \
     cmake \
     libssl-dev \
     zlib1g-dev \
