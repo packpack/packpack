@@ -40,8 +40,7 @@ RUN apt-get update && apt-get install -y --force-yes \
     lintian \
     equivs \
     rpm \
-    alien \
-    dh-systemd
+    alien
 
 # Enable sudo without password
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
