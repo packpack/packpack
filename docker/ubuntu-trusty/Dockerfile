@@ -6,9 +6,9 @@ RUN echo 'apt::install-recommends "false";' > /etc/apt/apt.conf.d/00recommends
 
 RUN apt-get update && apt-get install -y --force-yes \
     build-essential gdb git ccache \
-    devscripts debhelper fakeroot cdbs equivs rpm alien \
-    sudo curl dh-systemd software-properties-common \
-    ca-certificates
+    devscripts debhelper fakeroot lintian cdbs equivs rpm alien \
+    sudo curl dh-systemd ca-certificates \
+    software-properties-common python-software-properties
 
 RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
