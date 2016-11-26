@@ -58,7 +58,6 @@ RUN apt-get update && apt-get install -y --force-yes \
     python-dev \
     python-daemon \
     python-yaml \
-    python-msgpack \
     python-gevent \
     python-six \
     python-sphinx \
@@ -66,3 +65,4 @@ RUN apt-get update && apt-get install -y --force-yes \
     lua5.1 liblua5.1-dev \
     lua5.2 liblua5.2-dev \
     dh-lua
+RUN pip install msgpack-python
