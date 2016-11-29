@@ -53,7 +53,12 @@ fi
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     echo "Increase the maximum number of open file descriptors on macOS"
-    sudo launchctl limit maxfiles 1000000 1000000
+    NOFILE=20480
+    sudo sysctl -w kern.maxfiles=$NOFILE
+    sudo sysctl -w kern.maxfilesperproc=$NOFILE
+    sudo launchctl limit maxfiles $NOFILE $NOFILE
+    ulimit -S -n $NOFILE
+    ulimit -n
 fi
 
 if [ "$PACK" == "none" ]; then
