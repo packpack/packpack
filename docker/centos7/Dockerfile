@@ -10,22 +10,13 @@ ADD tarantool_1_6.repo /etc/yum.repos.d/
 RUN yum -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'
 
 # Install base toolset
+RUN yum -y groupinstall 'Development Tools'
 RUN yum -y install \
     devtoolset-4-toolchain devtoolset-4-binutils-devel \
     sudo \
-    git \
     wget \
     curl \
-    ccache \
-    yum-utils \
-    rpm-build \
-    rpmdevtools
-
-# Fix ccache installation with devtoolset
-RUN ln -s ../../bin/ccache /usr/lib64/ccache/cc && \
-    ln -s ../../bin/ccache /usr/lib64/ccache/gcc && \
-    ln -s ../../bin/ccache /usr/lib64/ccache/c++ && \
-    ln -s ../../bin/ccache /usr/lib64/ccache/g++
+    yum-utils
 
 # Enable sudo without tty
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
