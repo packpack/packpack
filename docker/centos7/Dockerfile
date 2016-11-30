@@ -12,8 +12,8 @@ RUN yum -y install \
     yum-utils
 RUN yum -y install epel-release centos-release-scl centos-release-scl-rh
 RUN yum -y install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6-x86_64/pgdg-centos96-9.6-3.noarch.rpm
-RUN curl -s https://packagecloud.io/install/repositories/packpack/backports/script.rpm.sh | bash
 RUN curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.rpm.sh | bash
+RUN curl -s https://packagecloud.io/install/repositories/packpack/backports/script.rpm.sh | bash
 
 # Install base toolset
 RUN yum -y groupinstall 'Development Tools'
