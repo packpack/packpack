@@ -5,19 +5,21 @@ MAINTAINER Roman Tsisyk <roman@tarantool.org>
 ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8"
 
 # Enable extra repositories
+RUN yum -y install \
+    wget \
+    curl \
+    pygpgme \
+    yum-utils
 RUN yum -y install epel-release centos-release-scl centos-release-scl-rh
-ADD tarantool_1_6.repo /etc/yum.repos.d/
-RUN yum -q makecache -y --disablerepo='*' --enablerepo='tarantool_1_6'
 RUN yum -y install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+RUN curl -s https://packagecloud.io/install/repositories/packpack/backports/script.rpm.sh | bash
+RUN curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.rpm.sh | bash
 
 # Install base toolset
 RUN yum -y groupinstall 'Development Tools'
 RUN yum -y install \
     devtoolset-4-toolchain devtoolset-4-binutils-devel \
-    sudo \
-    wget \
-    curl \
-    yum-utils
+    sudo
 
 # Enable sudo without tty
 RUN sed -i.bak -n -e '/^Defaults.*requiretty/ { s/^/# /;};/^%wheel.*ALL$/ { s/^/# / ;} ;/^#.*wheel.*NOPASSWD/ { s/^#[ ]*//;};p' /etc/sudoers
@@ -52,10 +54,5 @@ RUN yum -y install \
     python-msgpack \
     python-gevent \
     python-six \
-    python-sphinx
-
-# Install argparse
-RUN pip install argparse
-# Install gevent-1.0.1
-ADD python-gevent-1.0.1-1.x86_64.rpm /tmp/
-RUN yum -y install /tmp/python-gevent-1.0.1-1.x86_64.rpm
+    python-sphinx \
+    python-argparse
