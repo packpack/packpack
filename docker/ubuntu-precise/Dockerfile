@@ -20,11 +20,11 @@ RUN apt-get update && apt-get install -y --force-yes \
     software-properties-common python-software-properties
 ADD backports.list /etc/apt/sources.list.d/
 ADD preferences /etc/apt/preferences.d/
-RUN curl -L https://packagecloud.io/packpack/backports/gpgkey | apt-key add -
-ADD packpack_backports.list /etc/apt/sources.list.d/
-RUN curl -L https://packagecloud.io/tarantool/1_6/gpgkey | apt-key add -
-ADD tarantool_1_6.list /etc/apt/sources.list.d/
+RUN curl -s https://packagecloud.io/install/repositories/computology/apt-backport/script.deb.sh | bash
+RUN apt-get install -y --force-yes apt=1.2.10
 RUN apt-add-repository -y ppa:george-edison55/precise-backports
+RUN curl -s https://packagecloud.io/install/repositories/packpack/backports/script.deb.sh | bash
+RUN curl -s https://packagecloud.io/install/repositories/tarantool/1_6/script.deb.sh | bash
 
 # Install base toolset
 RUN apt-get update && apt-get install -y --force-yes \
