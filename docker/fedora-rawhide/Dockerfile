@@ -6,6 +6,7 @@ ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 # Enable ccache and fix paths for mock
 ENV PATH /usr/lib/ccache:/usr/bin:/usr/sbin:/bin:/sbin
 
+RUN echo "Invalidate cache 2016-12-21"
 RUN dnf -y group install 'Development Tools'
 RUN dnf -y group install 'C Development Tools and Libraries'
 RUN dnf -y group install 'RPM Development Tools'
