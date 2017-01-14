@@ -23,11 +23,13 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 		-e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
 		-e 's/%setup .*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
+		-e 's/%autosetup -n .*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
 		-i $@.tmp
 	grep -F "Version: $(VERSION)" $@.tmp && \
 		grep -F "Release: $(RELEASE)" $@.tmp && \
 		grep -F "Source0: $(TARBALL)" $@.tmp && \
-		grep -F "%setup -q -n $(PRODUCT)-$(VERSION)" $@.tmp || \
+		(grep -F "%setup -q -n $(PRODUCT)-$(VERSION)" $@.tmp || \
+		grep -F "%autosetup" $@.tmp) || \
 		(echo "Failed to patch RPM spec" && exit 1)
 	@ mv -f $@.tmp $@
 	@echo
