@@ -3,6 +3,9 @@ language: Python
 services:
   - docker
 
+git:
+    depth: 100500
+
 env:
     matrix:
       - OS=el DIST=6
