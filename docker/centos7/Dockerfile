@@ -55,3 +55,7 @@ RUN yum -y install \
     python-gevent \
     python-six \
     python-sphinx
+
+# A workaround for [Errno 14] HTTP Error 404 - Not Found
+# https://bugs.centos.org/view.php?id=12793
+RUN rm -rf /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
