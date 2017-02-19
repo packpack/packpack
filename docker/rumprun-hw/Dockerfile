@@ -18,22 +18,32 @@ ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 # Skip interactive post-install scripts
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -q -y --no-install-recommends \
+# Install base toolset
+RUN apt-get update && apt-get install -y --force-yes --no-install-recommends \
+    sudo \
+    git \
     gcc \
     g++ \
     make \
+    cmake \
+    tar \
+    xz-utils \
+    ccache \
     patch \
     diffutils \
     ca-certificates \
     wget \
-    git \
     libc6-dev \
     zlib1g-dev \
     && \
     apt-get clean
 
+# Enable sudo without password
+RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
 WORKDIR /usr/src
 
+# Compile rumprun toolchain
 ADD src-netbsd.patch .
 RUN BUILDRUMP_EXTRA="" && \
     git clone https://github.com/rumpkernel/rumprun.git \
@@ -48,7 +58,15 @@ ENV CBUILDROOT=/usr/rumprun-x86_64 \
     CBUILD=x86_64-linux-gnu \
     CHOST=x86_64-rumprun-netbsd
 
-# Install LibreSSL
+# Add patched CMake toolchain configuration
+ADD x86_64-rumprun-netbsd-toolchain.cmake ${CBUILDROOT}/share/
+ADD x86_64-rumprun-netbsd-cmake /usr/bin
+
+#
+# Install dependencies to speed up builds
+#
+
+# Cross-compile LibreSSL
 RUN wget http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.5.1.tar.gz && \
     tar xvf libressl-*.tar.* && cd libressl-*/ && \
     ./configure \
@@ -63,7 +81,7 @@ RUN wget http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.5.1.tar.gz && \
            ${CBUILDROOT}/share/info/ \
            ${CBUILDROOT}/share/doc/
 
-# Install ncurses
+# Cross-compile ncurses
 RUN wget http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz && \
     tar xvf ncurses-*.tar.* && cd ncurses-*/ && \
     ./configure \
@@ -84,7 +102,7 @@ RUN wget http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz && \
            ${CBUILDROOT}/share/info/ \
            ${CBUILDROOT}/share/doc/
 
-# Install libreadline
+# Cross-compile libreadline
 RUN wget http://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz && \
     tar xvf readline-*.tar.* && cd readline-*/ && \
     SHLIB_XLDFLAGS="" ./configure \
@@ -101,10 +119,3 @@ RUN wget http://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz && \
            ${CBUILDROOT}/share/doc/
 
 WORKDIR /
-
-# Add patched CMake toolchain configuration
-ADD x86_64-rumprun-netbsd-toolchain.cmake ${CBUILDROOT}/share/
-ADD x86_64-rumprun-netbsd-cmake /usr/bin
-
-# Enable sudo without password
-RUN echo '%adm ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

@@ -226,6 +226,11 @@ elif [ "${PACK}" == "deb" ]; then
         echo "Building Debian package from debian/"
         ${SCRIPTDIR}/packpack
     fi
+elif [ "${PACK}" == "rumprun" ]; then
+    if [ -d "rump/" ]; then
+        echo "Building Rumprun unikernel from rump/"
+        ${SCRIPTDIR}/packpack
+    fi
 elif [ "${PACK}" == "source" ]; then
     TARBALL_COMPRESSOR=gz ${SCRIPTDIR}/packpack tarball
 else

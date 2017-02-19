@@ -6,7 +6,9 @@ include $(PACKDIR)/config.mk
 -include .build.mk
 
 include $(PACKDIR)/tarball.mk
-ifneq (,$(wildcard /etc/redhat-release))
+ifneq (,$(wildcard /usr/rumprun-*))
+include $(PACKDIR)/rumprun.mk
+else ifneq (,$(wildcard /etc/redhat-release))
 include $(PACKDIR)/rpm.mk
 else ifneq (,$(wildcard /etc/debian_version))
 include $(PACKDIR)/deb.mk

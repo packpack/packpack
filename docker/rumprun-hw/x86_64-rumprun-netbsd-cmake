@@ -1,2 +1,2 @@
 #!/bin/sh
-exec cmake -DCMAKE_TOOLCHAIN_FILE=/usr/rumprun-x86_64/share/x86_64-rumprun-netbsd-toolchain.cmake $@
+exec /usr/bin/cmake -DCMAKE_TOOLCHAIN_FILE=/usr/rumprun-x86_64/share/x86_64-rumprun-netbsd-toolchain.cmake $@
