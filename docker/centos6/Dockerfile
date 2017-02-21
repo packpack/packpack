@@ -1,4 +1,4 @@
-FROM centos:6
+FROM centos:6.6
 MAINTAINER Roman Tsisyk <roman@tarantool.org>
 
 # Fix missing locales
