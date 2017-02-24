@@ -8,10 +8,11 @@ $(error Can't find RPM spec in rpm/ directory)
 endif
 $(info Using $(RPMSPECIN) file)
 
+RPMNAME := $(shell sed -n -e 's/Name:\([\ \t]*\)\(.*\)/\2/p' $(RPMSPECIN))
 RPMDIST := $(shell rpm -E "%{dist}")
 PKGVERSION := $(VERSION)-$(RELEASE)$(RPMDIST)
-RPMSPEC := $(PRODUCT).spec
-RPMSRC := $(PRODUCT)-$(PKGVERSION).src.rpm
+RPMSPEC := $(RPMNAME).spec
+RPMSRC := $(RPMNAME)-$(PKGVERSION).src.rpm
 
 $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
@@ -22,8 +23,8 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 		-e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
 		-e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
-		-e 's/%setup .*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
-		-e 's/%autosetup .*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
+		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
+		-e 's/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
 		-i $@.tmp
 	grep -F "Version: $(VERSION)" $@.tmp && \
 		grep -F "Release: $(RELEASE)" $@.tmp && \
@@ -76,7 +77,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 	@echo "------------------------------------------------------------------"
 	@echo "RPM packages are ready"
 	@echo "-------------------------------------------------------------------"
-	@ls -1s $(BUILDDIR)/*$(PRODUCT)*$(PKGVERSION).*.rpm  $(BUILDDIR)/build.log
+	@ls -1s $(BUILDDIR)/*$(RPMNAME)*$(PKGVERSION).*.rpm  $(BUILDDIR)/build.log
 	@echo "--"
 	@echo
 
@@ -89,6 +90,6 @@ clean::
 	rm -f $(BUILDDIR)/$(RPMSRC)
 	rm -f $(BUILDDIR)/*.rpm
 	rm -f $(BUILDDIR)/build.log
-	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+	rm -rf $(BUILDDIR)/$(RPMNAME)-$(VERSION)/
 
-.PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC) $(BUILDDIR)/$(RPMSPEC)
+.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC) $(BUILDDIR)/$(RPMSPEC)
