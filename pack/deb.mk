@@ -15,6 +15,18 @@ DPKG_BUILD:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE)_$(DPKG_ARCH).build
 DPKG_DSC:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE).dsc
 DPKG_ORIG_TARBALL:=$(PRODUCT)_$(DEB_VERSION).orig.tar.$(TARBALL_COMPRESSOR)
 DPKG_DEBIAN_TARBALL:=$(PRODUCT)_$(DEB_VERSION)-$(RELEASE).debian.tar.$(TARBALL_COMPRESSOR)
+DEB_SOURCE_FORMAT:=$(shell cat debian/source/format)
+ifneq ("$(DEB_SOURCE_FORMAT)","3.0 (native)")
+ifneq ("$(DEB_SOURCE_FORMAT)","3.0 (quilt)")
+define ERROR_UNSUPPORTED_FORMAT
+Unsupported Debian source package format.
+PackPack supports 3.0 (native) and 3.0 (quilt) source formats.
+Please refer to https://wiki.debian.org/Projects/DebSrc3.0 and
+dpkg-source(1) for additional information
+endef
+$(error $(ERROR_UNSUPPORTED_FORMAT))
+endif
+endif
 
 # gh-7: Ubuntu/Debian should export DEBIAN_FRONTEND=noninteractive
 export DEBIAN_FRONTEND=noninteractive
@@ -22,13 +34,22 @@ export DEBIAN_FRONTEND=noninteractive
 #
 # Prepare build directory
 #
-$(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/: $(BUILDDIR)/$(TARBALL)
+$(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian: $(BUILDDIR)/$(TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Preparing build directory"
 	@echo "-------------------------------------------------------------------"
+	# Unpack the source tarball
 	cd $(BUILDDIR) && tar xf $<
 	test -d $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+	# Add debian/ directory from git
 	cp -pfR debian/ $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+ifeq ("$(DEB_SOURCE_FORMAT)","3.0 (native)")
+	# Convert 3.0 (native) source package to 3.0 (quilt)
+	echo "3.0 (quilt)" > $@/source/format
+	# Remove debian/patches/ - native package must not have patches/
+	rm -rf $@/patches
+endif
+	# Bump version in debian/changelog
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		NAME=$(CHANGELOG_NAME) DEBEMAIL=$(CHANGELOG_EMAIL) \
 		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
@@ -39,13 +60,13 @@ $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/: $(BUILDDIR)/$(TARBALL)
 $(BUILDDIR)/$(DPKG_ORIG_TARBALL): $(BUILDDIR)/$(TARBALL)
 	cd $(BUILDDIR) && ln -s $(TARBALL) $(DPKG_ORIG_TARBALL)
 
-prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
+prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
          $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 
 #
 # Build packages
 #
-$(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian/ \
+$(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
                              $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
