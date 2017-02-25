@@ -32,7 +32,7 @@ endif
 export DEBIAN_FRONTEND=noninteractive
 
 #
-# Prepare build directory
+# Prepare the build directory
 #
 $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian: $(BUILDDIR)/$(TARBALL)
 	@echo "-------------------------------------------------------------------"
@@ -54,10 +54,8 @@ endif
 		NAME=$(CHANGELOG_NAME) DEBEMAIL=$(CHANGELOG_EMAIL) \
 		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
 
-#
-# Create a symlink for orig.tar.gz
-#
 $(BUILDDIR)/$(DPKG_ORIG_TARBALL): $(BUILDDIR)/$(TARBALL)
+	# Create a symlink for orig.tar.gz
 	cd $(BUILDDIR) && ln -s $(TARBALL) $(DPKG_ORIG_TARBALL)
 
 prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
@@ -71,17 +69,14 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
-	## Clear APT cache to fix Hash sum mismatch
-	# sudo apt-get clean
-	# sudo rm -rf /var/lib/apt/lists/*
 	sudo apt-get update > /dev/null
-	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" || :
-	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && sudo rm -f *build-deps_*.deb
+	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
+		sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" && \
+		sudo rm -f *build-deps_*.deb \
 	@echo
 	@echo "-------------------------------------------------------------------"
 	@echo "Building Debian packages"
 	@echo "-------------------------------------------------------------------"
-	rm -rf $(BUILDDIR)/tarball
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		debuild --preserve-envvar CCACHE_DIR --prepend-path=/usr/lib/ccache \
 		-Z$(TARBALL_COMPRESSOR) -uc -us $(SMPFLAGS)
