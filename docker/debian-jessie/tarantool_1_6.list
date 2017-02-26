@@ -1,2 +1,0 @@
-deb https://packagecloud.io/tarantool/1_6/debian/ jessie main
-deb-src https://packagecloud.io/tarantool/1_6/debian/ jessie main

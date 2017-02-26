@@ -1,2 +1,0 @@
-deb https://packagecloud.io/packpack/backports/debian/ wheezy main
-deb-src https://packagecloud.io/packpack/backports/debian/ wheezy main

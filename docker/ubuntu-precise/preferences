@@ -1,3 +1,0 @@
-Package: *
-Pin: release a=precise-backports
-Pin-Priority: 100
