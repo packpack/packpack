@@ -17,16 +17,27 @@ DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
 
 # Docker image to use
 if [ -n "${OS}" ] && [ -n "${DIST}" ]; then
-    if echo "${DIST}" | grep -c '^[0-9]\+$' > /dev/null; then
-        # Numeric dist, e.g. centos6 or fedora23
-        DOCKER_IMAGE="${OS}${DIST}"
-    else
-        # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
-        DOCKER_IMAGE="${OS}-${DIST}"
-    fi
+    # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
+    DOCKER_IMAGE="${OS}-${DIST}"
 else
     # Use ubuntu-xenial docker image if OS or DIST is invalid
     DOCKER_IMAGE=ubuntu-xenial
+fi
+
+# Docker architecture
+if [ -z "${ARCH}" ]; then
+    # Use uname -m instead of HOSTTYPE
+    case "$(uname -m)" in
+        i*86) ARCH="i386" ;;
+        arm*) ARCH="armhf" ;;
+        x86_64) ARCH="x86_64"; ;;
+        aarch64) ARCH="aarch64" ;;
+        *) ARCH="${HOSTTYPE}" ;;
+    esac
+fi
+
+if [ "${ARCH}" != "x86_64" ]; then
+    DOCKER_IMAGE="${DOCKER_IMAGE}-${ARCH}"
 fi
 
 version() {
@@ -48,6 +59,7 @@ usage() {
     echo "## Environment Variables"
     echo ""
     echo " * PRODUCT - the name of software product, e.g. 'tarantool'"
+    echo " * ARCH - architecture, e.g i386, x86_64, armhf (${ARCH})"
     echo " * OS - the name of distribution, e.g. debian or fedora (${OS})"
     echo " * DIST - the version of distribution, e.g. xenial or 24 (${DIST})"
     echo " * BUILDDIR - directory used for out-of-source build (${BUILDDIR})"
@@ -114,7 +126,7 @@ chcon -Rt svirt_sandbox_file_t ${PACKDIR} ${SOURCEDIR} ${BUILDDIR} \
 # Start Docker
 #
 set -ex
-#docker pull ${DOCKER_REPO}:${DOCKER_IMAGE}
+docker pull ${DOCKER_REPO}:${DOCKER_IMAGE}
 docker run \
         --volume "${PACKDIR}:/pack:ro" \
         --volume "${SOURCEDIR}:/source:ro" \

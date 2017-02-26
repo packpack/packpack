@@ -64,13 +64,24 @@ their own proprietary modules in the same manner as official packages.
 
 Of course, [PackPack] itself is packaged using [PackPack].
 
-## Supported Targets
+## Supported Platforms
+
+Distributions:
 
 * Debian Wheezy / Jessie / Stretch / Sid
-* Ubuntu Precise / Trusty / Xenial / Yakkety
-* Fedora 23 / 24 / 25 / Rawhide
+* Ubuntu Precise / Trusty / Xenial / Yakkety / Zesty
+* Fedora 24 / 25 / Rawhide
 * CentOS 6 / 7
 
+Archictectures:
+
+* `i386`
+* `x86_64`
+* `armhf` (32-bit ARM with hardware floating-point)
+* `aarch64` (64-bit ARM)
+
+The actual list of distribution is available on [Docker Hub]
+(https://hub.docker.com/r/packpack/packpack/tags/).
 Please file an [issue][Issues] if you want more.
 
 ## Getting Started
@@ -209,7 +220,6 @@ env:
     matrix:
       - OS=el DIST=6
       - OS=el DIST=7
-      - OS=fedora DIST=23
       - OS=fedora DIST=24
       - OS=fedora DIST=25
       - OS=ubuntu DIST=trusty
@@ -219,6 +229,8 @@ env:
       - OS=debian DIST=jessie
       - OS=debian DIST=wheezy
       - OS=debian DIST=stretch
+      - OS=ubuntu DIST=xenial ARCH=i386
+      - OS=debian DIST=jessie ARCH=i386
 
 script:
  - git submodule update --init --recursive
@@ -266,6 +278,15 @@ see an example in [tarantool/tarantool](Tarantool GitHub) repo.
 
 * `OS` - target operating system name, e.g. `fedora` or `ubuntu`
 * `DIST` - target distribution name, e.g `24` or `xenial`
+* `ARCH` - target architecture, like on Docker Hub:
+   - `i386`
+   - `x86_64`
+   - `armhf`
+   - `aarch64`
+   It is possible to use `ARCH=i386` on `x86_64` host and
+   `ARCH=armhf` on `aarch64` host, but there is no way to run ARM images on
+   Intel and vice versa. Docker is qemu and can't emulate foreign
+   instruction set.
 * `BUILDDIR` - a directory used to store intermediate files and resulted
    packages (default is `./build`).
 * `PRODUCT` - the name of software product, used for source tarball and
