@@ -58,7 +58,9 @@ package: $(BUILDDIR)/$(RPMSRC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
-	# sudo yum clean all
+	if [ -n "$(PACKAGECLOUD_USER)" ] && [ -n "$(PACKAGECLOUD_REPO)" ]; then \
+		curl -s https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)/script.rpm.sh | sudo bash; \
+	fi
 	sudo dnf builddep -y $< || sudo yum-builddep -y $<
 	@echo
 	@echo "-------------------------------------------------------------------"
