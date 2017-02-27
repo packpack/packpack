@@ -27,7 +27,7 @@ env:
 #      - OS=ubuntu DIST=zesty ARCH=i386
       - OS=debian DIST=wheezy ARCH=i386
       - OS=debian DIST=jessie ARCH=i386
-      - OS=debian DIST=stretch ARCH=i386
+#      - OS=debian DIST=stretch ARCH=i386
 
 script:
  - git submodule update --init --recursive
