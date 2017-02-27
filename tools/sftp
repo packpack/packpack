@@ -1,0 +1,61 @@
+#!/bin/bash
+
+if [ -z "${SFTP_HOST}" ]; then
+    echo "Missing SFTP_HOST"
+    exit 1
+elif [ -z "${SFTP_USER}" ]; then
+    echo "Missing SFTP_USER"
+    exit 1
+elif [ -z "$1" ]; then
+    echo "Usage: $0 prefix file1 file2..."
+    exit 1
+fi
+
+PREFIX=$1
+shift
+
+echo "Exporting $@ to SFTP ${PREFIX}"
+DECRYPTED_KEY_PATH=${DECRYPTED_KEY_PATH:-"extra/deploy_key"}
+ENCRYPTED_KEY_PATH=${ENCRYPTED_KEY_PATH:-"${DECRYPTED_KEY_PATH}.enc"}
+if [ ! -f "$DECRYPTED_KEY_PATH" ]; then
+    if [ -z "${ENCRYPTION_LABEL}" ]; then
+        echo "Failed to decrypt deployment key (not on Travis-CI)"
+        exit 1
+    fi
+    ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
+    ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
+    ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
+    ENCRYPTED_IV=${!ENCRYPTED_IV_VAR}
+    openssl aes-256-cbc -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV \
+        -in "$ENCRYPTED_KEY_PATH" -out "$DECRYPTED_KEY_PATH" -d
+    chmod 600 $DECRYPTED_KEY_PATH
+fi
+eval `ssh-agent -s`
+ssh-add $DECRYPTED_KEY_PATH
+
+rm -f *.md5sum sftp.log sftpscript.txt || :
+touch sftpscript.txt
+echo "cd ${PREFIX}" >> sftpscript.txt
+for f in $@; do
+    name=$(basename "$f")
+    md5sum $f > $f.md5sum
+    echo "put $f.md5sum ${name}.md5sum" >> sftpscript.txt
+    echo "put $f ${name}.tmp" >> sftpscript.txt
+    echo "rename ${name}.tmp ${name}" >> sftpscript.txt
+done
+
+echo "-- sftpscript.txt content"
+cat sftpscript.txt
+echo "-- output of task"
+cat sftpscript.txt | sftp -o "StrictHostKeyChecking no" ${SFTP_USER}@${SFTP_HOST} -v 2>&1 | tee sftp.log
+echo "-- task result"
+grep "failed\|Permission denied\|No such file or directory" sftp.log > /dev/null
+if [ $? -eq 0 ]; then
+    echo "(!) SFTP Upload failed :("
+    cat sftp.log
+    rm -f sftpscript.txt
+    exit -1
+else
+    echo "OK!"
+fi
+rm -f sftpscript.txt
