@@ -24,7 +24,7 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 		-e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
 		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
-		-e 's/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
+		-e '0,/%autosetup.*/ s/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
 		-i $@.tmp
 	grep -F "Version: $(VERSION)" $@.tmp && \
 		grep -F "Release: $(RELEASE)" $@.tmp && \
