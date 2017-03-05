@@ -270,7 +270,7 @@ That's it.
 
 
 BTW, Travis CI [allow to exclude some builds from matrix][Travis CI Matrix],
-see an example in [tarantool/tarantool](Tarantool GitHub) repo.
+see an example in [Tarantool GitHub](https://github.com/tarantool/tarantool) repo.
 
 ## Configuration
 
