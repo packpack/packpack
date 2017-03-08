@@ -13,6 +13,8 @@ RPMDIST := $(shell rpm -E "%{dist}")
 PKGVERSION := $(VERSION)-$(RELEASE)$(RPMDIST)
 RPMSPEC := $(RPMNAME).spec
 RPMSRC := $(RPMNAME)-$(PKGVERSION).src.rpm
+THEDATE := $(shell date +"%a %b %d %Y")
+GITHASH := $(shell git rev-parse --short HEAD)
 
 $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
@@ -25,6 +27,7 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
 		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
 		-e '0,/%autosetup.*/ s/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
+                -e '/%changelog/a\* $(THEDATE) PackPack <build@tarantool.org> - $(VERSION)-$(RELEASE)\n\- packpack nightly rebuild git rev $(GITHASH)\n' \
 		-i $@.tmp
 	grep -F "Version: $(VERSION)" $@.tmp && \
 		grep -F "Release: $(RELEASE)" $@.tmp && \
