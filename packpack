@@ -15,15 +15,6 @@ BUILDDIR=${BUILDDIR:-${SOURCEDIR}/build}
 # Docker repository to use
 DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
 
-# Docker image to use
-if [ -n "${OS}" ] && [ -n "${DIST}" ]; then
-    # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
-    DOCKER_IMAGE="${OS}-${DIST}"
-else
-    # Use ubuntu-xenial docker image if OS or DIST is invalid
-    DOCKER_IMAGE=ubuntu-xenial
-fi
-
 # Docker architecture
 if [ -z "${ARCH}" ]; then
     # Use uname -m instead of HOSTTYPE
@@ -36,8 +27,19 @@ if [ -z "${ARCH}" ]; then
     esac
 fi
 
-if [ "${ARCH}" != "x86_64" ]; then
-    DOCKER_IMAGE="${DOCKER_IMAGE}-${ARCH}"
+# Docker image to use
+if [ -z "${DOCKER_IMAGE}" ]; then
+    if [ -n "${OS}" ] && [ -n "${DIST}" ]; then
+        # Non-numeric dist, e.g. debian-sid, ubuntu-precise, etc.
+        DOCKER_IMAGE="${OS}-${DIST}"
+    else
+        # Use ubuntu-xenial docker image if OS or DIST is invalid
+        DOCKER_IMAGE=ubuntu-xenial
+    fi
+
+    if [ "${ARCH}" != "x86_64" ]; then
+        DOCKER_IMAGE="${DOCKER_IMAGE}-${ARCH}"
+    fi
 fi
 
 version() {
