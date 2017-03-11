@@ -36,7 +36,7 @@ if [ -z "${DOCKER_IMAGE}" ]; then
         # Use ubuntu-xenial docker image if OS or DIST is invalid
         DOCKER_IMAGE=ubuntu-xenial
     fi
-    
+
     if [ "${ARCH}" != "x86_64" ]; then
         DOCKER_IMAGE="${DOCKER_IMAGE}-${ARCH}"
     fi
@@ -109,8 +109,11 @@ chmod a+x ${BUILDDIR}/userwrapper.sh
 #
 # Save defined configuration variables to ./env file
 #
+# First, we need to make sure that the env file is exists
+touch ${BUILDDIR}/env
+# Then, append environment variables
 env | grep -E "TRAVIS|PRODUCT|VERSION|RELEASE|TARBALL_|CHANGELOG_|CCACHE_|PACKAGECLOUD_|SMPFLAGS" \
-    > ${BUILDDIR}/env
+    >> ${BUILDDIR}/env
 
 #
 # Setup cache directory
