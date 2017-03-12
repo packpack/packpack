@@ -51,7 +51,7 @@ ifeq ("$(DEB_SOURCE_FORMAT)","3.0 (native)")
 endif
 	# Bump version in debian/changelog
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
-		NAME=$(CHANGELOG_NAME) DEBEMAIL=$(CHANGELOG_EMAIL) \
+		NAME="$(CHANGELOG_NAME)" DEBEMAIL=$(CHANGELOG_EMAIL) \
 		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
 
 $(BUILDDIR)/$(DPKG_ORIG_TARBALL): $(BUILDDIR)/$(TARBALL)
