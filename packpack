@@ -7,7 +7,7 @@ PACKVERSION=1.0.0
 PACKDIR=$(cd $(dirname $0) && pwd)/pack
 
 # Source directory
-SOURCEDIR=${PWD}
+SOURCEDIR=${SOURCEDIR:-$PWD}
 
 # Build directory
 BUILDDIR=${BUILDDIR:-${SOURCEDIR}/build}
