@@ -54,9 +54,9 @@ RELEASE ?= 1
 REVISION ?= $(shell git rev-parse HEAD)
 
 # Name, email and text for changelog entry
-CHANGELOG_NAME ?= "PackPack"
-CHANGELOG_EMAIL ?= "build@tarantool.org"
-CHANGELOG_TEXT ?= "Automated build"
+CHANGELOG_NAME ?= PackPack
+CHANGELOG_EMAIL ?= build@tarantool.org
+CHANGELOG_TEXT ?= Automated build
 
 # Extra arguments for tar
 TARBALL_EXTRA_ARGS ?=
