@@ -25,6 +25,7 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 		-e 's/Release:\([ ]*\).*/Release: $(RELEASE)%{dist}/' \
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
 		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
+                -re 's/(%autosetup.*)( -n \S*)(.*)/\1\3/' \
 		-e '0,/%autosetup.*/ s/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
                 -e '/%changelog/a\* $(THEDATE) $(CHANGELOG_NAME) <$(CHANGELOG_EMAIL)> - $(VERSION)-$(RELEASE)\n\- $(CHANGELOG_TEXT)\n' \
 		-i $@.tmp
