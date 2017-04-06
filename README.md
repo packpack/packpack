@@ -198,7 +198,7 @@ PackPack performs the following steps:
   [to the project settings on Travis CI][Travis CI Environment]:
 
   + `PACKAGECLOUD_TOKEN=<token>` (secret)
-  + `PACKAGECLOD_USER=<username>` (public)
+  + `PACKAGECLOUD_USER=<username>` (public)
   + `PACKAGECLOUD_REPO=<reponame>` (public)
 
   [Click to see how][Travis CI Env].
