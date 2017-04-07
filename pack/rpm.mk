@@ -63,6 +63,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 	if [ -n "$(PACKAGECLOUD_USER)" ] && [ -n "$(PACKAGECLOUD_REPO)" ]; then \
 		curl -s https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)/script.rpm.sh | sudo bash; \
 	fi
+	sudo dnf update -y || sudo yum update -y
 	sudo dnf builddep -y $< || sudo yum-builddep -y $<
 	@echo
 	@echo "-------------------------------------------------------------------"
