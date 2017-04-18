@@ -54,6 +54,9 @@ their own proprietary modules in the same manner as official packages.
 ## Our Users
 
 * [Tarantool] - general-purpose database and Lua application server.
+* [ZoneMinder] - full-featured, open source, state-of-the-art video
+  surveillance software system.
+* [SysBench] - scriptable database and system performance benchmark.
 * [IronSSH] - secure end-to-end file transfer software developed by
   [IronCore Labs](https://ironcorelabs.com/).
 * [MINC Toolkit V2] - Medical Imaging NetCDF Toolkit developed by
@@ -357,6 +360,8 @@ Please **"Star"** this project on GitHub to help it to survive! Thanks!
 [Tarantool GitHub]: https://github.com/tarantool/tarantool
 [Mail.Ru Group]: https://corp.mail.ru/en/
 [IronSSH]: https://github.com/IronCoreLabs/ironssh
+[ZoneMinder]: https://github.com/ZoneMinder/ZoneMinder
+[SysBench]: https://github.com/akopytov/sysbench
 [Phalcon]: https://github.com/phalcongelist/packagecloud
 [MINC Toolkit v2]: https://github.com/gdevenyi/minc-toolkit-v2
 [LuaFun]: https://github.com/rtsisyk/luafun
