@@ -3,10 +3,12 @@
 #
 
 DEB_VERSION:=$(VERSION)
-ifneq ($(shell dpkg-parsechangelog|grep ^Version|grep -E "g[a-z0-9]{7}\-[0-9]+"),)
-# Add git hash to follow convention of official Debian packages
-DEB_VERSION := $(VERSION).g$(shell echo $(REVISION)|cut -c1-7)
+ifneq ($(shell dpkg-parsechangelog|grep ^Version|grep -E "g[abcdef0-9]{7,16}\-[0-9]+"),)
+ifneq ($(ABBREV),)
+# Add git abbreviation to follow the convention of official Debian packages
+DEB_VERSION := $(VERSION).$(ABBREV)
 $(info Added git hash to Debian package version: $(VERSION) => $(DEB_VERSION))
+endif
 endif
 
 DPKG_ARCH:=$(shell dpkg --print-architecture)

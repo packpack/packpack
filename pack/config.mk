@@ -23,6 +23,12 @@ PRODUCT := $(shell basename $(CURDIR))
 endif
 
 #
+# The output of `git describe` to generate VERSION, ABBREV and
+# ./VERSION file.
+#
+DESCRIBE := $(shell git describe --long --always)
+
+#
 # Semantic version of the software, e.g. 2.4.35.
 #
 # Major and minor versions are extracted from the closest git tag.
@@ -36,7 +42,7 @@ endif
 # Sic: please follow Semantic Versioning (http://semver.org),
 # Debian policies and Fedora guidelines then planning your releases.
 #
-VERSION ?= $(shell git describe --long --always | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
+VERSION ?= $(shell echo $(DESCRIBE) | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
 ifeq ($(VERSION),) # Fallback
 VERSION := 0.0.1
 endif
@@ -49,9 +55,16 @@ endif
 RELEASE ?= 1
 
 #
-# git hash without 'g' prefix, 7 hexadecimal digits
+# git abbreviation with 'g' prefix, 7+ hexadecimal digits
 #
-REVISION ?= $(shell git rev-parse HEAD)
+# From git 2.11.0 changelog:
+# The default abbreviation length, which has historically been 7, now
+#   scales as the repository grows, using the approximate number of
+#   objects in the repository and a bit of math around the birthday
+#   paradox.  The logic suggests to use 12 hexdigits for the Linux
+#   kernel, and 9 to 10 for Git itself.
+#
+ABBREV ?= $(shell echo $(DESCRIBE) | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\3/p')
 
 # Name, email and text for changelog entry
 CHANGELOG_NAME ?= PackPack

@@ -13,7 +13,7 @@ $(BUILDDIR)/VERSION:
 	@echo "Creating VERSION file"
 	@echo "-------------------------------------------------------------------"
 	@mkdir -p $(BUILDDIR)
-	git describe --long --always > $@
+	echo $(DESCRIBE) > $@
 
 #
 # Generate the list of source files for tarball
