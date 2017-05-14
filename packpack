@@ -4,7 +4,7 @@
 PACKVERSION=1.0.0
 
 # Path to PackPack makefiles
-PACKDIR=$(cd $(dirname $0) && pwd)/pack
+PACKDIR=$(cd $(dirname "$0") && pwd)/pack
 
 # Source directory
 SOURCEDIR=${SOURCEDIR:-$PWD}
@@ -141,7 +141,7 @@ docker run \
         -e CCACHE_DIR=/cache/ccache \
         --volume "${CACHE_DIR}:/cache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
-        make -f /pack/Makefile -C /source BUILDDIR=/build -j $@
+        make -f /pack/Makefile -C /source BUILDDIR=/build -j "$@"
 retcode=$?
 rm -f ${BUILDDIR}/userwrapper.sh ${BUILDDIR}/env
 exit $retcode
