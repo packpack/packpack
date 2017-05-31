@@ -74,6 +74,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	if [ -n "$(PACKAGECLOUD_USER)" ] && [ -n "$(PACKAGECLOUD_REPO)" ]; then \
 		curl -s https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)/script.deb.sh | sudo bash; \
 	fi
+	sudo rm -rf /var/lib/apt/lists/
 	sudo apt-get update > /dev/null
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" && \
