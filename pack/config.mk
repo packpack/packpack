@@ -70,6 +70,7 @@ ABBREV ?= $(shell echo $(DESCRIBE) | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-
 CHANGELOG_NAME ?= PackPack
 CHANGELOG_EMAIL ?= build@tarantool.org
 CHANGELOG_TEXT ?= Automated build
+CHANGELOG_DIST ?= $(shell echo $$DIST)
 
 # Extra arguments for tar
 TARBALL_EXTRA_ARGS ?=
