@@ -64,6 +64,7 @@ their own proprietary modules in the same manner as official packages.
 * [LuaFun] - functional programming library for Lua.
 * [MsgPuck] - simple and efficient MsgPack binary serialization library.
 * [Phalcon] - high performance PHP Framework.
+* [MyHTML] - a fast HTML Parser implemented as a pure C99 library.
 
 Of course, [PackPack] itself is packaged using [PackPack].
 
@@ -385,3 +386,4 @@ Please **"Star"** this project on GitHub to help it to survive! Thanks!
 [PackageCloud Example]: /doc/packagecloud.png
 [Tarantool Download]: https://tarantool.org/download.html
 [PackPack Repositories]: https://packagecloud.io/packpack/packpack/install
+[MyHTML]: https://github.com/lexborisov/myhtml
