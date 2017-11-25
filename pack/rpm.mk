@@ -13,7 +13,54 @@ RPMDIST := $(shell rpm -E "%{dist}")
 PKGVERSION := $(VERSION)-$(RELEASE)$(RPMDIST)
 RPMSPEC := $(RPMNAME).spec
 RPMSRC := $(RPMNAME)-$(PKGVERSION).src.rpm
+PREBUILD := prebuild.sh
+PREBUILD_OS := prebuild-$(OS).sh
+PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
 THEDATE := $(shell date +"%a %b %d %Y")
+
+
+#
+# Run prebuild scripts
+#
+ifeq ($(wildcard rpm/$(PREBUILD)),)
+$(BUILDDIR)/$(PREBUILD):
+	# empty
+else
+$(BUILDDIR)/$(PREBUILD): rpm/$(PREBUILD)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running common $(PREBUILD) script"
+	@echo "-------------------------------------------------------------------"
+	@cp $< $@
+	$@
+	@echo
+endif
+
+ifeq ($(wildcard rpm/$(PREBUILD_OS)),)
+$(BUILDDIR)/$(PREBUILD_OS):
+	# empty
+else
+$(BUILDDIR)/$(PREBUILD_OS): rpm/$(PREBUILD_OS)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS) script"
+	@echo "-------------------------------------------------------------------"
+	@cp $< $@
+	$@
+	@echo
+endif
+
+ifeq ($(wildcard rpm/$(PREBUILD_OS_DIST)),)
+$(BUILDDIR)/$(PREBUILD_OS_DIST):
+	# empty
+else
+$(BUILDDIR)/$(PREBUILD_OS_DIST): rpm/$(PREBUILD_OS_DIST)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS_DIST) script"
+	@echo "-------------------------------------------------------------------"
+	@cp $< $@
+	$@
+	@echo
+endif
+
 
 $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
@@ -41,7 +88,11 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 #
 # Build source RPM
 #
-$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(RPMSPEC)
+$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
+                       $(BUILDDIR)/$(RPMSPEC) \
+                       $(BUILDDIR)/$(PREBUILD) \
+                       $(BUILDDIR)/$(PREBUILD_OS) \
+                       $(BUILDDIR)/$(PREBUILD_OS_DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
@@ -93,8 +144,11 @@ koji: $(BUILDDIR)/$(RPMSRC)
 clean::
 	rm -f $(BUILDDIR)/$(RPMSPEC)
 	rm -f $(BUILDDIR)/$(RPMSRC)
+	rm -f $(BUILDDIR)/$(PREBUILD)
+	rm -f $(BUILDDIR)/$(PREBUILD_OS)
+	rm -f $(BUILDDIR)/$(PREBUILD_OS_DIST)
 	rm -f $(BUILDDIR)/*.rpm
 	rm -f $(BUILDDIR)/build.log
 	rm -rf $(BUILDDIR)/$(RPMNAME)-$(VERSION)/
 
-.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC) $(BUILDDIR)/$(RPMSPEC)
+.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC)

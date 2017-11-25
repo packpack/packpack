@@ -30,8 +30,54 @@ $(error $(ERROR_UNSUPPORTED_FORMAT))
 endif
 endif
 
+PREBUILD := prebuild.sh
+PREBUILD_OS := prebuild-$(OS).sh
+PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
+
 # gh-7: Ubuntu/Debian should export DEBIAN_FRONTEND=noninteractive
 export DEBIAN_FRONTEND=noninteractive
+
+#
+# Run prebuild scripts
+#
+ifeq ($(wildcard debian/$(PREBUILD)),)
+$(BUILDDIR)/$(PREBUILD):
+	# empty
+else
+$(BUILDDIR)/$(PREBUILD): debian/$(PREBUILD)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running common $(PREBUILD) script"
+	@echo "-------------------------------------------------------------------"
+	@cp $< $@
+	$@
+	@echo
+endif
+
+ifeq ($(wildcard debian/$(PREBUILD_OS)),)
+$(BUILDDIR)/$(PREBUILD_OS):
+	# empty
+else
+$(BUILDDIR)/$(PREBUILD_OS): debian/$(PREBUILD_OS)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS) script"
+	@echo "-------------------------------------------------------------------"
+	@cp $< $@
+	$@
+	@echo
+endif
+
+ifeq ($(wildcard debian/$(PREBUILD_OS_DIST)),)
+$(BUILDDIR)/$(PREBUILD_OS_DIST):
+	# empty
+else
+$(BUILDDIR)/$(PREBUILD_OS_DIST): debian/$(PREBUILD_OS_DIST)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS_DIST) script"
+	@echo "-------------------------------------------------------------------"
+	@cp $< $@
+	$@
+	@echo
+endif
 
 #
 # Prepare the build directory
@@ -67,7 +113,10 @@ prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 # Build packages
 #
 $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
-                             $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
+                             $(BUILDDIR)/$(DPKG_ORIG_TARBALL) \
+                             $(BUILDDIR)/$(PREBUILD) \
+                             $(BUILDDIR)/$(PREBUILD_OS) \
+                             $(BUILDDIR)/$(PREBUILD_OS_DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
@@ -110,6 +159,9 @@ clean::
 	rm -f $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 	rm -f $(BUILDDIR)/$(DPKG_DEBIAN_TARBALL)
 	rm -f $(BUILDDIR)/$(DPKG_DSC)
+	rm -f $(BUILDDIR)/$(PREBUILD)
+	rm -f $(BUILDDIR)/$(PREBUILD_OS)
+	rm -f $(BUILDDIR)/$(PREBUILD_OS_DIST)
 	rm -f $(BUILDDIR)/*.deb
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 
