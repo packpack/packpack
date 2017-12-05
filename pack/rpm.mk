@@ -8,7 +8,7 @@ $(error Can't find RPM spec in rpm/ directory)
 endif
 $(info Using $(RPMSPECIN) file)
 
-RPMNAME := $(shell sed -n -e 's/Name:\([\ \t]*\)\(.*\)/\2/p' $(RPMSPECIN))
+RPMNAME := $(shell sed -n -e 's/Name:\([\ \t]*\)\([a-zA-Z0-9]*\).*/\2/p' $(RPMSPECIN))
 RPMDIST := $(shell rpm -E "%{dist}")
 PKGVERSION := $(VERSION)-$(RELEASE)$(RPMDIST)
 RPMSPEC := $(RPMNAME).spec
