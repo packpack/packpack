@@ -23,41 +23,38 @@ THEDATE := $(shell date +"%a %b %d %Y")
 # Run prebuild scripts
 #
 ifeq ($(wildcard rpm/$(PREBUILD)),)
-$(BUILDDIR)/$(PREBUILD):
+prebuild:
 	# empty
 else
-$(BUILDDIR)/$(PREBUILD): rpm/$(PREBUILD)
+prebuild: rpm/$(PREBUILD)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running common $(PREBUILD) script"
 	@echo "-------------------------------------------------------------------"
-	@cp $< $@
-	$@
+	$<
 	@echo
 endif
 
 ifeq ($(wildcard rpm/$(PREBUILD_OS)),)
-$(BUILDDIR)/$(PREBUILD_OS):
+prebuild-$(OS):
 	# empty
 else
-$(BUILDDIR)/$(PREBUILD_OS): rpm/$(PREBUILD_OS)
+prebuild-$(OS): rpm/$(PREBUILD_OS)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS) script"
 	@echo "-------------------------------------------------------------------"
-	@cp $< $@
-	$@
+	$<
 	@echo
 endif
 
 ifeq ($(wildcard rpm/$(PREBUILD_OS_DIST)),)
-$(BUILDDIR)/$(PREBUILD_OS_DIST):
+prebuild-$(OS)-$(DIST):
 	# empty
 else
-$(BUILDDIR)/$(PREBUILD_OS_DIST): rpm/$(PREBUILD_OS_DIST)
+prebuild-$(OS)-$(DIST): rpm/$(PREBUILD_OS_DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS_DIST) script"
 	@echo "-------------------------------------------------------------------"
-	@cp $< $@
-	$@
+	$<
 	@echo
 endif
 
@@ -90,9 +87,9 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 #
 $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
                        $(BUILDDIR)/$(RPMSPEC) \
-                       $(BUILDDIR)/$(PREBUILD) \
-                       $(BUILDDIR)/$(PREBUILD_OS) \
-                       $(BUILDDIR)/$(PREBUILD_OS_DIST)
+                       prebuild \
+                       prebuild-$(OS) \
+                       prebuild-$(OS)-$(DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
@@ -144,11 +141,9 @@ koji: $(BUILDDIR)/$(RPMSRC)
 clean::
 	rm -f $(BUILDDIR)/$(RPMSPEC)
 	rm -f $(BUILDDIR)/$(RPMSRC)
-	rm -f $(BUILDDIR)/$(PREBUILD)
-	rm -f $(BUILDDIR)/$(PREBUILD_OS)
-	rm -f $(BUILDDIR)/$(PREBUILD_OS_DIST)
 	rm -f $(BUILDDIR)/*.rpm
 	rm -f $(BUILDDIR)/build.log
 	rm -rf $(BUILDDIR)/$(RPMNAME)-$(VERSION)/
 
 .PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC)
+.PHONY: prebuild prebuild-$(OS) prebuild-$(OS)-$(DIST)
