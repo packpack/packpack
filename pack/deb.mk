@@ -41,40 +41,37 @@ export DEBIAN_FRONTEND=noninteractive
 # Run prebuild scripts
 #
 ifeq ($(wildcard debian/$(PREBUILD)),)
-$(BUILDDIR)/$(PREBUILD):
+prebuild:
 	# empty
 else
-$(BUILDDIR)/$(PREBUILD): debian/$(PREBUILD)
+prebuild: debian/$(PREBUILD)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running common $(PREBUILD) script"
 	@echo "-------------------------------------------------------------------"
-	@cp $< $@
 	$@
 	@echo
 endif
 
 ifeq ($(wildcard debian/$(PREBUILD_OS)),)
-$(BUILDDIR)/$(PREBUILD_OS):
+prebuild-$(OS):
 	# empty
 else
-$(BUILDDIR)/$(PREBUILD_OS): debian/$(PREBUILD_OS)
+prebuild-$(OS): debian/$(PREBUILD_OS)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS) script"
 	@echo "-------------------------------------------------------------------"
-	@cp $< $@
 	$@
 	@echo
 endif
 
 ifeq ($(wildcard debian/$(PREBUILD_OS_DIST)),)
-$(BUILDDIR)/$(PREBUILD_OS_DIST):
+prebuild-$(OS)-$(DIST):
 	# empty
 else
-$(BUILDDIR)/$(PREBUILD_OS_DIST): debian/$(PREBUILD_OS_DIST)
+prebuild-$(OS)-$(DIST): debian/$(PREBUILD_OS_DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS_DIST) script"
 	@echo "-------------------------------------------------------------------"
-	@cp $< $@
 	$@
 	@echo
 endif
@@ -114,9 +111,9 @@ prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 #
 $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
                              $(BUILDDIR)/$(DPKG_ORIG_TARBALL) \
-                             $(BUILDDIR)/$(PREBUILD) \
-                             $(BUILDDIR)/$(PREBUILD_OS) \
-                             $(BUILDDIR)/$(PREBUILD_OS_DIST)
+                             prebuild \
+                             prebuild-$(OS) \
+                             prebuild-$(OS)-$(DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
@@ -159,11 +156,8 @@ clean::
 	rm -f $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 	rm -f $(BUILDDIR)/$(DPKG_DEBIAN_TARBALL)
 	rm -f $(BUILDDIR)/$(DPKG_DSC)
-	rm -f $(BUILDDIR)/$(PREBUILD)
-	rm -f $(BUILDDIR)/$(PREBUILD_OS)
-	rm -f $(BUILDDIR)/$(PREBUILD_OS_DIST)
 	rm -f $(BUILDDIR)/*.deb
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 
-.PHONY: clean
+.PHONY: clean prebuild prebuild-$(OS) prebuild-$(OS)-$(DIST)
 .PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
