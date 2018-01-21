@@ -6,11 +6,11 @@
 TARBALL ?= $(PRODUCT)-$(VERSION).tar.$(TARBALL_COMPRESSOR)
 
 #
-# Generate VERSION file
+# Generate VERSION.packpack file
 #
-$(BUILDDIR)/VERSION:
+$(BUILDDIR)/VERSION.packpack:
 	@echo "-------------------------------------------------------------------"
-	@echo "Creating VERSION file"
+	@echo "Creating VERSION.packpack file"
 	@echo "-------------------------------------------------------------------"
 	@mkdir -p $(BUILDDIR)
 	echo $(DESCRIBE) > $@
@@ -29,7 +29,7 @@ $(BUILDDIR)/ls-lR.txt:
 #
 # Pack source tarball
 #
-$(BUILDDIR)/$(TARBALL): $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
+$(BUILDDIR)/$(TARBALL): $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION.packpack
 	@echo "-------------------------------------------------------------------"
 	@echo "Creating source tarball"
 	@echo "-------------------------------------------------------------------"
@@ -37,11 +37,11 @@ $(BUILDDIR)/$(TARBALL): $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
 		--exclude=.git --exclude='.gitignore' --exclude='.gitmodules' \
 		$(TARBALL_EXTRA_ARGS) \
 		--exclude=FreeBSD --exclude=debian --exclude=rpm --exclude=rump \
-		--transform="s,$(BUILDDIR)/VERSION,VERSION,S" \
+		--transform="s,$(BUILDDIR)/VERSION.packpack,VERSION.packpack,S" \
 		--transform="s,,$(PRODUCT)-$(VERSION)/,S" \
 		--owner=root --group=root \
 		-T $< --show-transformed \
-		-caPf $@ $(BUILDDIR)/VERSION $(TARBALL_EXTRA_FILES)
+		-caPf $@ $(BUILDDIR)/VERSION.packpack $(TARBALL_EXTRA_FILES)
 	@echo "------------------------------------------------------------------"
 	@echo "Tarball is ready"
 	@echo "-------------------------------------------------------------------"
@@ -55,5 +55,5 @@ clean::
 	rm -f $(BUILDDIR)/$(TARBALL)
 
 .PRECIOUS:: $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
-.INTERMEDIATE:: $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
+.INTERMEDIATE:: $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION.packpack
 .PHONY: clean

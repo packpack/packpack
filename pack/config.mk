@@ -24,7 +24,7 @@ endif
 
 #
 # The output of `git describe` to generate VERSION, ABBREV and
-# ./VERSION file.
+# ./VERSION.packpack file.
 #
 DESCRIBE := $(shell git describe --long --always)
 
