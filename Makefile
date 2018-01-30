@@ -24,4 +24,5 @@ install: $(DESTDIR)$(bindir)/packpack \
          $(DESTDIR)$(datadir)/packpack/config.mk \
          $(DESTDIR)$(datadir)/packpack/tarball.mk \
          $(DESTDIR)$(datadir)/packpack/deb.mk \
-         $(DESTDIR)$(datadir)/packpack/rpm.mk
+         $(DESTDIR)$(datadir)/packpack/rpm.mk \
+         $(DESTDIR)$(datadir)/packpack/apk.mk
