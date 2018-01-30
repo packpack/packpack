@@ -95,15 +95,31 @@ esac
 # Create an entry point for Docker to allow builds from non-root user
 #
 mkdir -p ${BUILDDIR}
-(
-echo "#!/bin/sh";
-echo "useradd -u $(id -u) $USER";
-echo "usermod -a -G sudo $USER 2>/dev/null || :";
-echo "usermod -a -G wheel $USER 2>/dev/null || :";
-echo "usermod -a -G adm $USER 2>/dev/null || :";
-echo "export HOME=/home/$USER" ;
-echo "exec chroot --userspec=$USER / \$@";
-) > ${BUILDDIR}/userwrapper.sh
+
+if [ "${OS}" = "alpine" ]; then
+    (
+        echo "#!/bin/sh";
+        echo "adduser -u $(id -u) -D $USER";
+        echo "adduser $USER adm";
+        echo "adduser $USER wheel";
+        echo "adduser $USER abuild";
+        echo "export HOME=/home/$USER" ;
+        echo "abuild-keygen -a -i -n";
+        echo "su-exec $USER \$@";
+    ) > ${BUILDDIR}/userwrapper.sh
+else
+    (
+        echo "#!/bin/sh";
+        echo "useradd -u $(id -u) $USER";
+        echo "usermod -a -G sudo $USER 2>/dev/null || :";
+        echo "usermod -a -G wheel $USER 2>/dev/null || :";
+        echo "usermod -a -G adm $USER 2>/dev/null || :";
+        echo "export HOME=/home/$USER" ;
+        echo "exec chroot --userspec=$USER / \$@";
+    ) > ${BUILDDIR}/userwrapper.sh
+fi
+
+
 chmod a+x ${BUILDDIR}/userwrapper.sh
 
 #
