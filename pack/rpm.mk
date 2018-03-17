@@ -8,6 +8,8 @@ $(error Can't find RPM spec in rpm/ directory)
 endif
 $(info Using $(RPMSPECIN) file)
 
+EXTRA_SOURCE_FILES := $(filter-out $(RPMSPECIN),$(wildcard rpm/*))
+
 RPMSPEC_AVAIL := $(shell command -v rpmspec 2> /dev/null)
 
 ifndef RPMSPEC_AVAIL
@@ -97,6 +99,10 @@ $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
                        prebuild \
                        prebuild-$(OS) \
                        prebuild-$(OS)-$(DIST)
+	@echo "-------------------------------------------------------------------"
+	@echo "Copying extra source files"
+	@echo "-------------------------------------------------------------------"
+	test -z "$(EXTRA_SOURCE_FILES)" || cp -p $(EXTRA_SOURCE_FILES) $(BUILDDIR)/
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
