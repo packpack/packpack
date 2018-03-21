@@ -102,7 +102,7 @@ $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
 	@echo "-------------------------------------------------------------------"
 	@echo "Copying extra source files"
 	@echo "-------------------------------------------------------------------"
-	test -z "$(EXTRA_SOURCE_FILES)" || cp -p $(EXTRA_SOURCE_FILES) $(BUILDDIR)/
+	test -z "$(EXTRA_SOURCE_FILES)" || cp -pR $(EXTRA_SOURCE_FILES) $(BUILDDIR)/
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
