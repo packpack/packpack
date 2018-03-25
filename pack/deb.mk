@@ -53,10 +53,10 @@ prebuild: debian/$(PREBUILD)
 endif
 
 ifeq ($(wildcard debian/$(PREBUILD_OS)),)
-prebuild-$(OS):
+prebuild-$(OS): prebuild
 	# empty
 else
-prebuild-$(OS): debian/$(PREBUILD_OS)
+prebuild-$(OS): debian/$(PREBUILD_OS) prebuild
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS) script"
 	@echo "-------------------------------------------------------------------"
@@ -65,10 +65,10 @@ prebuild-$(OS): debian/$(PREBUILD_OS)
 endif
 
 ifeq ($(wildcard debian/$(PREBUILD_OS_DIST)),)
-prebuild-$(OS)-$(DIST):
+prebuild-$(OS)-$(DIST): prebuild-$(OS)
 	# empty
 else
-prebuild-$(OS)-$(DIST): debian/$(PREBUILD_OS_DIST)
+prebuild-$(OS)-$(DIST): debian/$(PREBUILD_OS_DIST) prebuild-$(OS)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS_DIST) script"
 	@echo "-------------------------------------------------------------------"
@@ -111,8 +111,6 @@ prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 #
 $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
                              $(BUILDDIR)/$(DPKG_ORIG_TARBALL) \
-                             prebuild \
-                             prebuild-$(OS) \
                              prebuild-$(OS)-$(DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"

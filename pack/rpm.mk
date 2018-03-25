@@ -44,10 +44,10 @@ prebuild: rpm/$(PREBUILD)
 endif
 
 ifeq ($(wildcard rpm/$(PREBUILD_OS)),)
-prebuild-$(OS):
+prebuild-$(OS): prebuild
 	# empty
 else
-prebuild-$(OS): rpm/$(PREBUILD_OS)
+prebuild-$(OS): rpm/$(PREBUILD_OS) prebuild
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS) script"
 	@echo "-------------------------------------------------------------------"
@@ -56,10 +56,10 @@ prebuild-$(OS): rpm/$(PREBUILD_OS)
 endif
 
 ifeq ($(wildcard rpm/$(PREBUILD_OS_DIST)),)
-prebuild-$(OS)-$(DIST):
+prebuild-$(OS)-$(DIST): prebuild-$(OS)
 	# empty
 else
-prebuild-$(OS)-$(DIST): rpm/$(PREBUILD_OS_DIST)
+prebuild-$(OS)-$(DIST): rpm/$(PREBUILD_OS_DIST) prebuild-$(OS)
 	@echo "-------------------------------------------------------------------"
 	@echo "Running $(PREBUILD_OS_DIST) script"
 	@echo "-------------------------------------------------------------------"
@@ -96,8 +96,6 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 #
 $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
                        $(BUILDDIR)/$(RPMSPEC) \
-                       prebuild \
-                       prebuild-$(OS) \
                        prebuild-$(OS)-$(DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Copying extra source files"
