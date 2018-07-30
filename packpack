@@ -155,6 +155,7 @@ docker run \
         --entrypoint=/build/userwrapper.sh \
         -e XDG_CACHE_HOME=/cache \
         -e CCACHE_DIR=/cache/ccache \
+        -e TMPDIR=/tmp \
         --volume "${CACHE_DIR}:/cache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j "$@"
