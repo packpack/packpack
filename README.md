@@ -76,6 +76,7 @@ Distributions:
 * Ubuntu Precise / Trusty / Xenial / Yakkety / Zesty
 * Fedora 24 / 25 / Rawhide
 * CentOS 6 / 7
+* Alpine (initial support)
 
 Archictectures:
 
@@ -84,8 +85,8 @@ Archictectures:
 * `armhf` (32-bit ARM with hardware floating-point)
 * `aarch64` (64-bit ARM)
 
-The actual list of distribution is available on [Docker Hub]
-(https://hub.docker.com/r/packpack/packpack/tags/).
+The actual list of distribution is available on
+[Docker Hub](https://hub.docker.com/r/packpack/packpack/tags/).
 Please file an [issue][Issues] if you want more.
 
 ## Getting Started
