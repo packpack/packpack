@@ -127,6 +127,7 @@ chmod a+x ${BUILDDIR}/userwrapper.sh
 #
 env | grep -E "^PRODUCT=|^VERSION=|^RELEASE=|^ABBREV=|^TARBALL_|^CHANGELOG_|^CCACHE_|^PACKAGECLOUD_|^SMPFLAGS=|^OS=|^DIST=" \
     > ${BUILDDIR}/env
+env | grep -E "^PACKPASS_" | sed 's/^PACKPASS_//g' >> ${BUILDDIR}/env
 
 #
 # Setup cache directory
