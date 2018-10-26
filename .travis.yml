@@ -17,6 +17,7 @@ env:
       - OS=ubuntu DIST=xenial
       - OS=ubuntu DIST=artful
       - OS=ubuntu DIST=bionic
+      - OS=ubuntu DIST=cosmic
       - OS=debian DIST=wheezy
       - OS=debian DIST=jessie
       - OS=debian DIST=stretch
@@ -24,6 +25,7 @@ env:
       - OS=ubuntu DIST=xenial ARCH=i386
       - OS=ubuntu DIST=artful ARCH=i386
       - OS=ubuntu DIST=bionic ARCH=i386
+      - OS=ubuntu DIST=cosmic ARCH=i386
       - OS=debian DIST=wheezy ARCH=i386
       - OS=debian DIST=jessie ARCH=i386
       - OS=debian DIST=stretch ARCH=i386
