@@ -34,6 +34,14 @@ PREBUILD := prebuild.sh
 PREBUILD_OS := prebuild-$(OS).sh
 PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
 
+ifneq (,$(PACKAGECLOUD_USER))
+ifneq (,$(PACKAGECLOUD_REPO))
+PACKAGECLOUD_BASE_URL=https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)
+PACKAGECLOUD_CONFIG_URL=$(PACKAGECLOUD_BASE_URL)/config_file.list?os=$(OS)&dist=$(DIST)&source=script
+PACKAGECLOUD_SCRIPT_URL=$(PACKAGECLOUD_BASE_URL)/script.deb.sh
+endif
+endif
+
 # gh-7: Ubuntu/Debian should export DEBIAN_FRONTEND=noninteractive
 export DEBIAN_FRONTEND=noninteractive
 
@@ -115,8 +123,11 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
-	if [ -n "$(PACKAGECLOUD_USER)" ] && [ -n "$(PACKAGECLOUD_REPO)" ]; then \
-		curl -s https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)/script.deb.sh | sudo bash; \
+	# Skip the repository enabling if variables do not set or the
+	# repository does not exist.
+	if [ -n "$(PACKAGECLOUD_CONFIG_URL)" ] && \
+			curl -sSf "$(PACKAGECLOUD_CONFIG_URL)" >/dev/null; then \
+		curl -sSf "$(PACKAGECLOUD_SCRIPT_URL)" | sudo bash; \
 	fi
 	sudo rm -rf /var/lib/apt/lists/
 	sudo apt-get update > /dev/null
