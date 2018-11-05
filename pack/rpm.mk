@@ -27,13 +27,6 @@ PREBUILD_OS := prebuild-$(OS).sh
 PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
 THEDATE := $(shell date +"%a %b %d %Y")
 
-ifneq (,$(PACKAGECLOUD_USER))
-ifneq (,$(PACKAGECLOUD_REPO))
-PACKAGECLOUD_BASE_URL=https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)
-PACKAGECLOUD_CONFIG_URL=$(PACKAGECLOUD_BASE_URL)/config_file.repo?os=$(OS)&dist=$(DIST)&source=script
-PACKAGECLOUD_SCRIPT_URL=$(PACKAGECLOUD_BASE_URL)/script.rpm.sh
-endif
-endif
 
 #
 # Run prebuild scripts
@@ -127,11 +120,8 @@ package: $(BUILDDIR)/$(RPMSRC)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
-	# Skip the repository enabling if variables do not set or the
-	# repository does not exist.
-	if [ -n "$(PACKAGECLOUD_CONFIG_URL)" ] && \
-			curl -sSf "$(PACKAGECLOUD_CONFIG_URL)" >/dev/null; then \
-		curl -sSf "$(PACKAGECLOUD_SCRIPT_URL)" | sudo bash; \
+	if [ -n "$(PACKAGECLOUD_USER)" ] && [ -n "$(PACKAGECLOUD_REPO)" ]; then \
+		curl -s https://packagecloud.io/install/repositories/$(PACKAGECLOUD_USER)/$(PACKAGECLOUD_REPO)/script.rpm.sh | sudo bash; \
 	fi
 	sudo dnf builddep -y $< || sudo yum-builddep -y $<
 	@echo
