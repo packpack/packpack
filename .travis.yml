@@ -34,7 +34,11 @@ script:
  - git submodule update --init --recursive
  - git fetch -a
  - git describe --long --always
- - ./packpack
+ # Omit enabling of the packagecloud repository during build, because:
+ # 1. We don't use it during build.
+ # 2. It does not exists before we push a first package, that
+ #    lead to errors during repository updating.
+ - PACKAGECLOUD_USER="" PACKAGECLOUD_REPO="" ./packpack
 
 deploy:
   # Deploy packages to PackageCloud
