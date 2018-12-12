@@ -11,7 +11,9 @@ Build-Depends: debhelper (>= 9),
 
 Package: packpack
 Architecture: all
-Depends: dash, docker-engine (>= 1.5.0), ${misc:Depends}
+Depends: dash,
+         docker-engine (>= 1.5.0) | docker-ce (>= 17.03.0-ce),
+         ${misc:Depends}
 Description: Simple tool to build RPM and Debian packages from git repository.
  PackPack is a simple tool to build RPM and Debian packages from
  git repository using Docker:
