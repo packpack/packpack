@@ -15,6 +15,9 @@ BUILDDIR=${BUILDDIR:-${SOURCEDIR}/build}
 # Docker repository to use
 DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
 
+# Extra parameters for docker run.
+PACKPACK_EXTRA_DOCKER_RUN_PARAMS="${PACKPACK_EXTRA_DOCKER_RUN_PARAMS:-}"
+
 # Docker architecture
 if [ -z "${ARCH}" ]; then
     # Use uname -m instead of HOSTTYPE
@@ -146,6 +149,7 @@ chcon -Rt svirt_sandbox_file_t ${PACKDIR} ${SOURCEDIR} ${BUILDDIR} \
 set -ex
 docker pull ${DOCKER_REPO}:${DOCKER_IMAGE}
 docker run \
+        ${PACKPACK_EXTRA_DOCKER_RUN_PARAMS} \
         --volume "${PACKDIR}:/pack:ro" \
         --volume "${SOURCEDIR}:/source:ro" \
         --volume "${BUILDDIR}:/build" \
