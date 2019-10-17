@@ -14,6 +14,8 @@ else ifneq (,$(wildcard /etc/debian_version))
 include $(PACKDIR)/deb.mk
 else ifneq (,$(wildcard /etc/alpine-release))
 include $(PACKDIR)/apk.mk
+else ifneq (,$(shell grep "^ID=\"opensuse-leap\"" /etc/os-release))
+include $(PACKDIR)/rpm.mk
 else
 prepare:
 package: tarball
