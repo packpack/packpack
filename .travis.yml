@@ -8,56 +8,26 @@ git:
 
 env:
     matrix:
-      - OS=el DIST=6
-      - OS=el DIST=7
-      - OS=fedora DIST=26
-      - OS=fedora DIST=27
-      - OS=fedora DIST=28
-      - OS=ubuntu DIST=trusty
-      - OS=ubuntu DIST=xenial
-      - OS=ubuntu DIST=artful
-      - OS=ubuntu DIST=bionic
-      - OS=ubuntu DIST=cosmic
-      - OS=debian DIST=wheezy
-      - OS=debian DIST=jessie
-      - OS=debian DIST=stretch
-      - OS=ubuntu DIST=trusty ARCH=i386
-      - OS=ubuntu DIST=xenial ARCH=i386
-      - OS=ubuntu DIST=artful ARCH=i386
-      - OS=ubuntu DIST=bionic ARCH=i386
-      - OS=ubuntu DIST=cosmic ARCH=i386
-      - OS=debian DIST=wheezy ARCH=i386
-      - OS=debian DIST=jessie ARCH=i386
-      - OS=debian DIST=stretch ARCH=i386
+      - OS=fedora DIST=31
 
 script:
- - git submodule update --init --recursive
- - git fetch -a
- - git describe --long --always
- # Omit enabling of the packagecloud repository during build, because:
- # 1. We don't use it during build.
- # 2. It does not exists before we push a first package, that
- #    lead to errors during repository updating.
- - PACKAGECLOUD_USER="" PACKAGECLOUD_REPO="" ./packpack
+ - ls -al .
+ - pwd
+ - wget https://tkn.me/tmp/python2-gevent-1.3.6-5.fc31.x86_64.rpm
+ - wget https://tkn.me/tmp/python2-gevent-debuginfo-1.3.6-5.fc31.x86_64.rpm
+ - wget https://tkn.me/tmp/python-gevent-1.3.6-5.fc31.src.rpm
+ - wget https://tkn.me/tmp/python-gevent-debugsource-1.3.6-5.fc31.x86_64.rpm
+ - ls -al *fc31*.rpm
 
 deploy:
   # Deploy packages to PackageCloud
   provider: packagecloud
-  username: ${PACKAGECLOUD_USER}
-  repository: ${PACKAGECLOUD_REPO}
+  username: packpack
+  repository: backports
   token: ${PACKAGECLOUD_TOKEN}
   dist: ${OS}/${DIST}
-  package_glob: build/*.{deb,rpm}
+  package_glob: '*.rpm'
   skip_cleanup: true
   on:
-    branch: master
+    all_branches: true
     condition: -n "${OS}" && -n "${DIST}" && -z "${ARCH}" && -n "${PACKAGECLOUD_TOKEN}"
-
-# Prune old packages from PackageCloud (keep the two latest versions)
-after_deploy:
- - pip install -r ./tools/requirements.txt
- - python ./tools/packagecloud prune ${PACKAGECLOUD_USER}/${PACKAGECLOUD_REPO} deb ${OS} ${DIST} --keep 2
- - python ./tools/packagecloud prune ${PACKAGECLOUD_USER}/${PACKAGECLOUD_REPO} rpm ${OS} ${DIST} --keep 2
-
-notifications:
-  email: true
