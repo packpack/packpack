@@ -135,7 +135,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_srcrpmdir $(BUILDDIR)' \
 		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		--define '_smp_mflags $(SMPFLAGS)' \
-		--rebuild --with backtrace $< 2>&1 | tee $(BUILDDIR)/build.log
+		--rebuild $< 2>&1 | tee $(BUILDDIR)/build.log
 	mv -f $(BUILDDIR)/RPMS/*/*.rpm $(BUILDDIR)
 	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT $(BUILDDIR)/usr
 	@echo "------------------------------------------------------------------"
