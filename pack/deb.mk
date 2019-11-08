@@ -30,8 +30,51 @@ $(error $(ERROR_UNSUPPORTED_FORMAT))
 endif
 endif
 
+PREBUILD := prebuild.sh
+PREBUILD_OS := prebuild-$(OS).sh
+PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
+
 # gh-7: Ubuntu/Debian should export DEBIAN_FRONTEND=noninteractive
 export DEBIAN_FRONTEND=noninteractive
+
+#
+# Run prebuild scripts
+#
+ifeq ($(wildcard debian/$(PREBUILD)),)
+prebuild:
+	# empty
+else
+prebuild: debian/$(PREBUILD)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running common $(PREBUILD) script"
+	@echo "-------------------------------------------------------------------"
+	$<
+	@echo
+endif
+
+ifeq ($(wildcard debian/$(PREBUILD_OS)),)
+prebuild-$(OS): prebuild
+	# empty
+else
+prebuild-$(OS): debian/$(PREBUILD_OS) prebuild
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS) script"
+	@echo "-------------------------------------------------------------------"
+	$<
+	@echo
+endif
+
+ifeq ($(wildcard debian/$(PREBUILD_OS_DIST)),)
+prebuild-$(OS)-$(DIST): prebuild-$(OS)
+	# empty
+else
+prebuild-$(OS)-$(DIST): debian/$(PREBUILD_OS_DIST) prebuild-$(OS)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS_DIST) script"
+	@echo "-------------------------------------------------------------------"
+	$<
+	@echo
+endif
 
 #
 # Prepare the build directory
@@ -67,7 +110,8 @@ prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 # Build packages
 #
 $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
-                             $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
+                             $(BUILDDIR)/$(DPKG_ORIG_TARBALL) \
+                             prebuild-$(OS)-$(DIST)
 	@echo "-------------------------------------------------------------------"
 	@echo "Installing dependencies"
 	@echo "-------------------------------------------------------------------"
@@ -113,5 +157,5 @@ clean::
 	rm -f $(BUILDDIR)/*.deb
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 
-.PHONY: clean
+.PHONY: clean prebuild prebuild-$(OS) prebuild-$(OS)-$(DIST)
 .PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/

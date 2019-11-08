@@ -10,30 +10,35 @@ env:
     matrix:
       - OS=el DIST=6
       - OS=el DIST=7
-      - OS=fedora DIST=24
-      - OS=fedora DIST=25
-      - OS=ubuntu DIST=precise
+      - OS=fedora DIST=26
+      - OS=fedora DIST=27
+      - OS=fedora DIST=28
       - OS=ubuntu DIST=trusty
       - OS=ubuntu DIST=xenial
-      - OS=ubuntu DIST=yakkety
-#      - OS=ubuntu DIST=zesty
+      - OS=ubuntu DIST=artful
+      - OS=ubuntu DIST=bionic
+      - OS=ubuntu DIST=cosmic
       - OS=debian DIST=wheezy
       - OS=debian DIST=jessie
       - OS=debian DIST=stretch
-      - OS=ubuntu DIST=precise ARCH=i386
       - OS=ubuntu DIST=trusty ARCH=i386
       - OS=ubuntu DIST=xenial ARCH=i386
-      - OS=ubuntu DIST=yakkety ARCH=i386
-#      - OS=ubuntu DIST=zesty ARCH=i386
+      - OS=ubuntu DIST=artful ARCH=i386
+      - OS=ubuntu DIST=bionic ARCH=i386
+      - OS=ubuntu DIST=cosmic ARCH=i386
       - OS=debian DIST=wheezy ARCH=i386
       - OS=debian DIST=jessie ARCH=i386
-#      - OS=debian DIST=stretch ARCH=i386
+      - OS=debian DIST=stretch ARCH=i386
 
 script:
  - git submodule update --init --recursive
  - git fetch -a
  - git describe --long --always
- - ./packpack
+ # Omit enabling of the packagecloud repository during build, because:
+ # 1. We don't use it during build.
+ # 2. It does not exists before we push a first package, that
+ #    lead to errors during repository updating.
+ - PACKAGECLOUD_USER="" PACKAGECLOUD_REPO="" ./packpack
 
 deploy:
   # Deploy packages to PackageCloud

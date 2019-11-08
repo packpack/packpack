@@ -64,6 +64,7 @@ their own proprietary modules in the same manner as official packages.
 * [LuaFun] - functional programming library for Lua.
 * [MsgPuck] - simple and efficient MsgPack binary serialization library.
 * [Phalcon] - high performance PHP Framework.
+* [MyHTML] - a fast HTML Parser implemented as a pure C99 library.
 
 Of course, [PackPack] itself is packaged using [PackPack].
 
@@ -75,6 +76,7 @@ Distributions:
 * Ubuntu Precise / Trusty / Xenial / Yakkety / Zesty
 * Fedora 24 / 25 / Rawhide
 * CentOS 6 / 7
+* Alpine (initial support)
 
 Archictectures:
 
@@ -83,8 +85,8 @@ Archictectures:
 * `armhf` (32-bit ARM with hardware floating-point)
 * `aarch64` (64-bit ARM)
 
-The actual list of distribution is available on [Docker Hub]
-(https://hub.docker.com/r/packpack/packpack/tags/).
+The actual list of distribution is available on
+[Docker Hub](https://hub.docker.com/r/packpack/packpack/tags/).
 Please file an [issue][Issues] if you want more.
 
 ## Getting Started
@@ -298,6 +300,8 @@ see an example in [Tarantool GitHub](https://github.com/tarantool/tarantool) rep
    (default is extracted for `git describe`).
 * `RELEASE` - the number of times this version of the software has been
    packaged (default is 1).
+* `ABBREV` - abbreviation of build metadata (default is git hash, extracted
+   from `git describe`).
 *  `TARBALL_COMPRESSOR` - a compression algorithm to use, e.g. gz, bz2, xz
    (default is xz).
 * `CHANGELOG_NAME`, `CHANGELOG_EMAIL`, `CHANGELOG_TEXT` - information
@@ -385,3 +389,4 @@ Please **"Star"** this project on GitHub to help it to survive! Thanks!
 [PackageCloud Example]: /doc/packagecloud.png
 [Tarantool Download]: https://tarantool.org/download.html
 [PackPack Repositories]: https://packagecloud.io/packpack/packpack/install
+[MyHTML]: https://github.com/lexborisov/myhtml

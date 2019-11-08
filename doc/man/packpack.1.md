@@ -37,6 +37,8 @@ repository:
    (default is extracted for `git describe`).
 * `RELEASE` - the number of times this version of the software has been
    packaged (default is 1).
+* `ABBREV` - abbreviation of build metadata (default is git hash, extracted
+   from `git describe`).
 *  `TARBALL_COMPRESSOR` - a compression algorithm to use, e.g. gz, bz2, xz
    (default is xz).
 * `CHANGELOG_NAME`, `CHANGELOG_EMAIL`, `CHANGELOG_TEXT` - information

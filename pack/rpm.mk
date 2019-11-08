@@ -8,12 +8,65 @@ $(error Can't find RPM spec in rpm/ directory)
 endif
 $(info Using $(RPMSPECIN) file)
 
+EXTRA_SOURCE_FILES := $(filter-out $(RPMSPECIN),$(wildcard rpm/*))
+
+RPMSPEC_AVAIL := $(shell command -v rpmspec 2> /dev/null)
+
+ifndef RPMSPEC_AVAIL
 RPMNAME := $(shell sed -n -e 's/Name:\([\ \t]*\)\(.*\)/\2/p' $(RPMSPECIN))
+else
+RPMNAME := $(shell rpmspec -P $(RPMSPECIN) | sed -n -e 's/Name:\([\ \t]*\)\(.*\)/\2/p')
+endif
+
 RPMDIST := $(shell rpm -E "%{dist}")
 PKGVERSION := $(VERSION)-$(RELEASE)$(RPMDIST)
 RPMSPEC := $(RPMNAME).spec
 RPMSRC := $(RPMNAME)-$(PKGVERSION).src.rpm
+PREBUILD := prebuild.sh
+PREBUILD_OS := prebuild-$(OS).sh
+PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
 THEDATE := $(shell date +"%a %b %d %Y")
+
+
+#
+# Run prebuild scripts
+#
+ifeq ($(wildcard rpm/$(PREBUILD)),)
+prebuild:
+	# empty
+else
+prebuild: rpm/$(PREBUILD)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running common $(PREBUILD) script"
+	@echo "-------------------------------------------------------------------"
+	$<
+	@echo
+endif
+
+ifeq ($(wildcard rpm/$(PREBUILD_OS)),)
+prebuild-$(OS): prebuild
+	# empty
+else
+prebuild-$(OS): rpm/$(PREBUILD_OS) prebuild
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS) script"
+	@echo "-------------------------------------------------------------------"
+	$<
+	@echo
+endif
+
+ifeq ($(wildcard rpm/$(PREBUILD_OS_DIST)),)
+prebuild-$(OS)-$(DIST): prebuild-$(OS)
+	# empty
+else
+prebuild-$(OS)-$(DIST): rpm/$(PREBUILD_OS_DIST) prebuild-$(OS)
+	@echo "-------------------------------------------------------------------"
+	@echo "Running $(PREBUILD_OS_DIST) script"
+	@echo "-------------------------------------------------------------------"
+	$<
+	@echo
+endif
+
 
 $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
@@ -41,7 +94,13 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 #
 # Build source RPM
 #
-$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(RPMSPEC)
+$(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
+                       $(BUILDDIR)/$(RPMSPEC) \
+                       prebuild-$(OS)-$(DIST)
+	@echo "-------------------------------------------------------------------"
+	@echo "Copying extra source files"
+	@echo "-------------------------------------------------------------------"
+	test -z "$(EXTRA_SOURCE_FILES)" || cp -pR $(EXTRA_SOURCE_FILES) $(BUILDDIR)/
 	@echo "-------------------------------------------------------------------"
 	@echo "Building source package"
 	@echo "-------------------------------------------------------------------"
@@ -76,7 +135,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_srcrpmdir $(BUILDDIR)' \
 		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		--define '_smp_mflags $(SMPFLAGS)' \
-		--rebuild --with backtrace $< 2>&1 | tee $(BUILDDIR)/build.log
+		--rebuild $< 2>&1 | tee $(BUILDDIR)/build.log
 	mv -f $(BUILDDIR)/RPMS/*/*.rpm $(BUILDDIR)
 	rm -rf $(BUILDDIR)/RPMS/ $(BUILDDIR)/BUILDROOT $(BUILDDIR)/usr
 	@echo "------------------------------------------------------------------"
@@ -97,4 +156,5 @@ clean::
 	rm -f $(BUILDDIR)/build.log
 	rm -rf $(BUILDDIR)/$(RPMNAME)-$(VERSION)/
 
-.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC) $(BUILDDIR)/$(RPMSPEC)
+.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC)
+.PHONY: prebuild prebuild-$(OS) prebuild-$(OS)-$(DIST)
