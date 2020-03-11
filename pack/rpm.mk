@@ -109,6 +109,7 @@ $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
 		--define '_sourcedir $(BUILDDIR)' \
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
+		--define '_ci $(CI)' \
 		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		-bs $(BUILDDIR)/$(RPMSPEC)
 prepare: $(BUILDDIR)/$(RPMSRC)
@@ -133,6 +134,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_sourcedir $(BUILDDIR)' \
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
+		--define '_ci $(CI)' \
 		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		--define '_smp_mflags $(SMPFLAGS)' \
 		--rebuild $< 2>&1 | tee $(BUILDDIR)/build.log

@@ -157,6 +157,13 @@ See [PackPack Repositories] for additional instructions.
 
 PackPack performs the following steps:
 
+- Checks if it runs in CI environment reading predefined variables from CI
+  and sets its appropriate name in 'CI' variable from the list:
+    'appveyor', 'circle', 'github', 'gitlab', 'travis'.
+  If CI is not detected 'CI' variable will be empty.
+  'CI' is passed to RPM spec as '\_ci' macro and as 'CI' environment
+  variable to DEB rules.
+
 - A Docker container is started using `packpack/packpack:$OS$DIST` image.
 
 - The source repository is mounted to the container as a read-only volume.

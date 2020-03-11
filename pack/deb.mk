@@ -129,6 +129,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	@echo "-------------------------------------------------------------------"
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		debuild --preserve-envvar CCACHE_DIR --prepend-path=/usr/lib/ccache \
+		--preserve-envvar CI \
 		-Z$(TARBALL_COMPRESSOR) -uc -us $(SMPFLAGS)
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 	@echo "------------------------------------------------------------------"

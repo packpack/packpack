@@ -18,6 +18,25 @@ DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
 # Extra parameters for docker run.
 PACKPACK_EXTRA_DOCKER_RUN_PARAMS="${PACKPACK_EXTRA_DOCKER_RUN_PARAMS:-}"
 
+# Set CI variable to CI provider name
+CI=""
+if [ "${APPVEYOR:-}" = "True" -o "${APPVEYOR:-}" = "true" ]; then
+    # https://www.appveyor.com/docs/environment-variables/
+    CI="appveyor"
+elif [ "${CIRCLECI:-}" = "true" ]; then
+    # https://circleci.com/docs/2.0/env-vars/
+    CI="circle"
+elif [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+    # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
+    CI="github"
+elif [ "${GITLAB_CI:-}" = "true" ]; then
+    # https://docs.gitlab.com/ee/ci/variables/
+    CI="gitlab"
+elif [ "${TRAVIS:-}" = "true" ]; then
+    # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+    CI="travis"
+fi
+
 # Docker architecture
 if [ -z "${ARCH}" ]; then
     # Use uname -m instead of HOSTTYPE
@@ -160,6 +179,7 @@ docker run \
         -e XDG_CACHE_HOME=/cache \
         -e CCACHE_DIR=/cache/ccache \
         -e TMPDIR=/tmp \
+        -e CI=${CI} \
         --volume "${CACHE_DIR}:/cache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j "$@"
