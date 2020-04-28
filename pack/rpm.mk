@@ -27,6 +27,11 @@ PREBUILD_OS := prebuild-$(OS).sh
 PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
 THEDATE := $(shell date +"%a %b %d %Y")
 
+ifeq ($(CI),)
+       CI_MACRO=%{nil}
+else
+       CI_MACRO=$(CI)
+endif
 
 #
 # Run prebuild scripts
@@ -109,7 +114,7 @@ $(BUILDDIR)/$(RPMSRC): $(BUILDDIR)/$(TARBALL) \
 		--define '_sourcedir $(BUILDDIR)' \
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
-		--define '_ci $(CI)' \
+		--define '_ci $(CI_MACRO)' \
 		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		-bs $(BUILDDIR)/$(RPMSPEC)
 prepare: $(BUILDDIR)/$(RPMSRC)
@@ -134,7 +139,7 @@ package: $(BUILDDIR)/$(RPMSRC)
 		--define '_sourcedir $(BUILDDIR)' \
 		--define '_specdir $(BUILDDIR)' \
 		--define '_srcrpmdir $(BUILDDIR)' \
-		--define '_ci $(CI)' \
+		--define '_ci $(CI_MACRO)' \
 		--define '_builddir $(BUILDDIR)/usr/src/debug' \
 		--define '_smp_mflags $(SMPFLAGS)' \
 		--rebuild $< 2>&1 | tee $(BUILDDIR)/build.log
