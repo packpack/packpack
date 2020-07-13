@@ -74,8 +74,8 @@ Distributions:
 
 * Debian Wheezy / Jessie / Stretch / Sid
 * Ubuntu Precise / Trusty / Xenial / Yakkety / Zesty
-* Fedora 24 / 25 / Rawhide
-* CentOS 6 / 7
+* Fedora 24-32
+* CentOS 6-8
 * Alpine (initial support)
 
 Archictectures:
@@ -95,6 +95,8 @@ Please file an [issue][Issues] if you want more.
   (bash, dash, zsh, etc.).
   The complicated one is Docker, please see the detailed guide on
   [docs.docker.com web-site][Docker Installation Guide].
+  Fedora / Red Hat users can also use `podman` with the `podman-docker`
+  RPM.
 
 - Add RPM `spec` to `rpm/` folder of your git repository. The best way to
   create a new `spec` file for your product is to find an existing one for

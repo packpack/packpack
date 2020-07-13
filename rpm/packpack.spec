@@ -11,7 +11,11 @@ BuildRequires: sed
 BuildRequires: make
 Requires: bash
 Requires: coreutils
+%if (0%{?fedora} >= 31) || (0%{?rhel} >= 8)
+Requires: podman-docker
+%else
 Requires: docker >= 1.5
+%endif
 
 %description
  PackPack is a simple tool to build RPM and Debian packages
