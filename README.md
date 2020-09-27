@@ -43,7 +43,7 @@ Linux distribution.
 **Traditional tools**, like `mock` and `pbuilder`, were tremendously slow and
 ridiculously overcomplicated. Customers **had to wait hours** for hotfix
 packages and the project paid thousands of dollars annually for hardware and
-electricy bills. Such cost are unacceptable for the most "free as in speech"
+electricity bills. Such costs are unacceptable for most "free as in speech"
 open-source projects.
 
 **PackPack** has reduced __push-to-package__ time **from hours to minutes**.
