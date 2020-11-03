@@ -122,7 +122,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	sudo apt-get update > /dev/null
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" && \
-		sudo rm -f *build-deps_*.deb \
+		sudo rm -f *build-deps_*.deb *build-deps_*.buildinfo *build-deps_*.changes \
 	@echo
 	@echo "-------------------------------------------------------------------"
 	@echo "Building Debian packages"
