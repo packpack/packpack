@@ -147,8 +147,19 @@ chmod a+x ${BUILDDIR}/userwrapper.sh
 #
 # Save defined configuration variables to ./env file
 #
-env | grep -E "^PRODUCT=|^VERSION=|^RELEASE=|^ABBREV=|^TARBALL_|^CHANGELOG_|^CCACHE_|^PACKAGECLOUD_|^SMPFLAGS=|^OS=|^DIST=|^VAR_" \
-    > ${BUILDDIR}/env
+env | grep -E "^PRODUCT=|^VERSION=|^RELEASE=|^ABBREV=" > ${BUILDDIR}/env
+env | grep -E "^TARBALL_|^CHANGELOG_|^CCACHE_|^PACKAGECLOUD_" >> ${BUILDDIR}/env
+env | grep -E "^SMPFLAGS=|^OS=|^DIST=" >> ${BUILDDIR}/env
+
+#
+# Pass variables with 'VAR_' prefix.
+#
+env | grep "^VAR_" >> ${BUILDDIR}/env
+
+#
+# Pass continuous interation service name.
+#
+echo "CI=${CI}" >> ${BUILDDIR}/env
 
 #
 # Setup cache directory
@@ -179,7 +190,6 @@ docker run \
         -e XDG_CACHE_HOME=/cache \
         -e CCACHE_DIR=/cache/ccache \
         -e TMPDIR=/tmp \
-        -e CI=${CI} \
         --volume "${CACHE_DIR}:/cache" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j "$@"
