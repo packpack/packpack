@@ -162,6 +162,16 @@ env | grep "^VAR_" >> ${BUILDDIR}/env
 echo "CI=${CI}" >> ${BUILDDIR}/env
 
 #
+# Preserve environment variables as requested by a user.
+#
+if [ -n "${PRESERVE_ENVVARS:-}" ]; then
+    echo "PRESERVE_ENVVARS=${PRESERVE_ENVVARS}" >> ${BUILDDIR}/env
+    (IFS=,; for envvar in ${PRESERVE_ENVVARS}; do
+        env | grep "^${envvar}=" >> "${BUILDDIR}/env"
+    done)
+fi
+
+#
 # Setup cache directory
 #
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/packpack"

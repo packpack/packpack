@@ -84,3 +84,8 @@ TARBALL_COMPRESSOR ?= xz
 # Specifies the number of GNU make jobs (commands) to run simultaneously.
 #
 SMPFLAGS ?= -j$(shell nproc)
+
+#
+# A comma separated list of environment variables to preserve.
+#
+PRESERVE_ENVVARS ?=
