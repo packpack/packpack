@@ -37,6 +37,15 @@ PREBUILD_OS_DIST := prebuild-$(OS)-$(DIST).sh
 # gh-7: Ubuntu/Debian should export DEBIAN_FRONTEND=noninteractive
 export DEBIAN_FRONTEND=noninteractive
 
+# Pass certain set of environment variables to the debuild's
+# environment.
+ifneq ($(PRESERVE_ENVVARS),)
+comma := ,
+opt := --preserve-envvar
+DEBUILD_PRESERVE_ENVVARS_OPTS := \
+	$(opt) $(subst $(comma), $(opt) ,$(PRESERVE_ENVVARS))
+endif
+
 #
 # Run prebuild scripts
 #
@@ -130,6 +139,7 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		debuild --preserve-envvar CCACHE_DIR --prepend-path=/usr/lib/ccache \
 		--preserve-envvar CI \
+		$(DEBUILD_PRESERVE_ENVVARS_OPTS) \
 		-Z$(TARBALL_COMPRESSOR) -uc -us $(SMPFLAGS)
 	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
 	@echo "------------------------------------------------------------------"

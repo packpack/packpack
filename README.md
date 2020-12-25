@@ -315,6 +315,8 @@ see an example in [Tarantool GitHub](https://github.com/tarantool/tarantool) rep
    used to bump version in changelog files.
 * `DOCKER_REPO` - a Docker repository to use (default is `packpack/packpack`).
 * `CCACHE*` - Config variables for ccache, such as CCACHE_DISABLE
+* `PRESERVE_ENVVARS` - a comma separated list of environment variables to
+  preserve.
 
 See the full list of available options and detailed configuration guide in
 [pack/config.mk](pack/config.mk) configuration file.
