@@ -74,7 +74,7 @@ Distributions:
 
 * Debian Wheezy / Jessie / Stretch / Sid
 * Ubuntu Precise / Trusty / Xenial / Yakkety / Zesty
-* Fedora 24-32
+* Fedora 24-33
 * CentOS 6-8
 * Alpine (initial support)
 
