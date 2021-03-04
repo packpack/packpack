@@ -96,6 +96,26 @@ prebuild-$(OS)-$(DIST): rpm/$(PREBUILD_OS_DIST) prebuild-$(OS)
 endif
 
 prebuild_cleanup:
+	# Found that on old OS with old metadata in cache a lot of connections hangs
+	# on the first packages update. On second packages update command fails with
+	# errors because of hanged connections, like:
+	#   237   connect(11, {sa_family=AF_INET6, sin6_port=htons(443), sin6_flowinfo=htonl(0),
+	#           inet_pton(AF_INET6, "2605:bc80:3010:600:dead:beef:cafe:fed9", &sin6_addr), sin6_scope_id=0}, 28 <unfinished ...>
+	#   236   rt_sigaction(SIGPIPE, NULL,  <unfinished ...>
+	#   237   <... connect resumed>)            = -1 ENETUNREACH (Network is unreachable)
+	# To avoid of it DNF cache should be cleaned before initial use:
+	if [ -f /etc/os-release ] ; then \
+		. /etc/os-release ; \
+		if [ "$$ID" == "fedora" -o "$$ID" == "centos" ] ; then \
+			echo "Cleaning up DNF cache" ; \
+			sudo dnf clean all ; \
+			sudo rm -rf /var/cache/dnf ; \
+			echo "Remove disabled 'failovermethod' since Fedora 29" ; \
+			sudo sed -i '/^failovermethod=/d' /etc/yum.repos.d/*.repo ; \
+			echo "Update packages" ; \
+			sudo dnf update -v -y ||: ; \
+		fi ; \
+	fi
 	# To avoid of such errors with broken repositories on openSuSE:
 	#   Media source 'http://download.opensuse.org/distribution/leap/15.2/repo/oss/' does not contain the desired medium
 	# need to cleanup and refresh it before use
