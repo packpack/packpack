@@ -13,7 +13,7 @@ SOURCEDIR=${SOURCEDIR:-$PWD}
 BUILDDIR=${BUILDDIR:-${SOURCEDIR}/build}
 
 # Docker repository to use
-DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
+DOCKER_REPO=${DOCKER_REPO:-avtikhon/packpack}
 
 # Extra parameters for docker run.
 PACKPACK_EXTRA_DOCKER_RUN_PARAMS="${PACKPACK_EXTRA_DOCKER_RUN_PARAMS:-}"
@@ -187,7 +187,7 @@ chcon -Rt svirt_sandbox_file_t ${PACKDIR} ${SOURCEDIR} ${BUILDDIR} \
 # Start Docker
 #
 set -ex
-docker pull ${DOCKER_REPO}:${DOCKER_IMAGE}
+docker pull ${DOCKER_REPO}:${DOCKER_IMAGE}-dnfclean
 docker run \
         ${PACKPACK_EXTRA_DOCKER_RUN_PARAMS} \
         --volume "${PACKDIR}:/pack:ro" \
@@ -201,7 +201,7 @@ docker run \
         -e CCACHE_DIR=/cache/ccache \
         -e TMPDIR=/tmp \
         --volume "${CACHE_DIR}:/cache" \
-        ${DOCKER_REPO}:${DOCKER_IMAGE} \
+        ${DOCKER_REPO}:${DOCKER_IMAGE}-dnfclean \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j "$@"
 retcode=$?
 rm -f ${BUILDDIR}/userwrapper.sh ${BUILDDIR}/env

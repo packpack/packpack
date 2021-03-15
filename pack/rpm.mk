@@ -104,18 +104,18 @@ prebuild_cleanup:
 	#   236   rt_sigaction(SIGPIPE, NULL,  <unfinished ...>
 	#   237   <... connect resumed>)            = -1 ENETUNREACH (Network is unreachable)
 	# To avoid of it DNF cache should be cleaned before initial use:
-	if [ -f /etc/os-release ] ; then \
-		. /etc/os-release ; \
-		if [ "$$ID" == "fedora" -o "$$ID" == "centos" ] ; then \
-			echo "Cleaning up DNF cache" ; \
-			sudo dnf clean all ; \
-			sudo rm -rf /var/cache/dnf ; \
-			echo "Remove disabled 'failovermethod' since Fedora 29" ; \
-			sudo sed -i '/^failovermethod=/d' /etc/yum.repos.d/*.repo ; \
-			echo "Update packages" ; \
-			sudo dnf update -v -y ||: ; \
-		fi ; \
-	fi
+	#if [ -f /etc/os-release ] ; then \
+	#	. /etc/os-release ; \
+	#	if [ "$$ID" == "fedora" -o "$$ID" == "centos" ] ; then \
+	#		echo "Cleaning up DNF cache" ; \
+	#		sudo dnf clean all ; \
+	#		sudo rm -rf /var/cache/dnf ; \
+	#		echo "Remove disabled 'failovermethod' since Fedora 29" ; \
+	#		sudo sed -i '/^failovermethod=/d' /etc/yum.repos.d/*.repo ; \
+	#		echo "Update packages" ; \
+	#		sudo dnf update -v -y ||: ; \
+	#	fi ; \
+	#fi
 	# To avoid of such errors with broken repositories on openSuSE:
 	#   Media source 'http://download.opensuse.org/distribution/leap/15.2/repo/oss/' does not contain the desired medium
 	# need to cleanup and refresh it before use
