@@ -2,11 +2,11 @@
 # Packer for Debian packages
 #
 
-DEB_VERSION:=$(VERSION)
+DEB_VERSION:=$(shell echo $(VERSION) | sed 's@-\(alpha\|beta\|rc\)@~\1@')
 ifneq ($(shell dpkg-parsechangelog|grep ^Version|grep -E "g[abcdef0-9]{7,16}\-[0-9]+"),)
 ifneq ($(ABBREV),)
 # Add git abbreviation to follow the convention of official Debian packages
-DEB_VERSION := $(VERSION).$(ABBREV)
+DEB_VERSION := $(DEB_VERSION).$(ABBREV)
 $(info Added git hash to Debian package version: $(VERSION) => $(DEB_VERSION))
 endif
 endif
@@ -88,15 +88,15 @@ endif
 #
 # Prepare the build directory
 #
-$(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian: $(BUILDDIR)/$(TARBALL)
+$(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)/debian: $(BUILDDIR)/$(TARBALL)
 	@echo "-------------------------------------------------------------------"
 	@echo "Preparing build directory"
 	@echo "-------------------------------------------------------------------"
 	# Unpack the source tarball
 	cd $(BUILDDIR) && tar xf $<
-	test -d $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+	test -d $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)
 	# Add debian/ directory from git
-	cp -pfR debian/ $(BUILDDIR)/$(PRODUCT)-$(VERSION)
+	cp -pfR debian/ $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)
 ifeq ("$(DEB_SOURCE_FORMAT)","3.0 (native)")
 	# Convert 3.0 (native) source package to 3.0 (quilt)
 	echo "3.0 (quilt)" > $@/source/format
@@ -104,7 +104,7 @@ ifeq ("$(DEB_SOURCE_FORMAT)","3.0 (native)")
 	rm -rf $@/patches
 endif
 	# Bump version in debian/changelog
-	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
+	cd $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION) && \
 		NAME="$(CHANGELOG_NAME)" DEBEMAIL=$(CHANGELOG_EMAIL) \
 		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
 
@@ -112,13 +112,13 @@ $(BUILDDIR)/$(DPKG_ORIG_TARBALL): $(BUILDDIR)/$(TARBALL)
 	# Create a symlink for orig.tar.gz
 	cd $(BUILDDIR) && ln -s $(TARBALL) $(DPKG_ORIG_TARBALL)
 
-prepare: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
+prepare: $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)/debian \
          $(BUILDDIR)/$(DPKG_ORIG_TARBALL)
 
 #
 # Build packages
 #
-$(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
+$(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)/debian \
                              $(BUILDDIR)/$(DPKG_ORIG_TARBALL) \
                              prebuild-$(OS)-$(DIST)
 	@echo "-------------------------------------------------------------------"
@@ -129,19 +129,19 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	fi
 	sudo rm -rf /var/lib/apt/lists/
 	sudo apt-get update > /dev/null
-	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
+	cd $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION) && \
 		sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" && \
 		sudo rm -f *build-deps_*.deb *build-deps_*.buildinfo *build-deps_*.changes \
 	@echo
 	@echo "-------------------------------------------------------------------"
 	@echo "Building Debian packages"
 	@echo "-------------------------------------------------------------------"
-	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
+	cd $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION) && \
 		debuild --preserve-envvar CCACHE_DIR --prepend-path=/usr/lib/ccache \
 		--preserve-envvar CI \
 		$(DEBUILD_PRESERVE_ENVVARS_OPTS) \
 		-Z$(TARBALL_COMPRESSOR) -uc -us $(SMPFLAGS)
-	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+	rm -rf $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)/
 	@echo "------------------------------------------------------------------"
 	@echo "Debian packages are ready"
 	@echo "-------------------------------------------------------------------"
@@ -166,7 +166,7 @@ clean::
 	rm -f $(BUILDDIR)/$(DPKG_DEBIAN_TARBALL)
 	rm -f $(BUILDDIR)/$(DPKG_DSC)
 	rm -f $(BUILDDIR)/*.deb
-	rm -rf $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+	rm -rf $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)/
 
 .PHONY: clean prebuild prebuild-$(OS) prebuild-$(OS)-$(DIST)
-.PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+.PRECIOUS:: $(BUILDDIR)/$(PRODUCT)-$(DEB_VERSION)/

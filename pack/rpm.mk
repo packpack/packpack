@@ -42,7 +42,8 @@ ifeq ($(shell rpm -E "%{is_opensuse}"),1)
 	RPMRELEASE := $(RPMDIST).$(RELEASE).1
 endif
 
-PKGVERSION := $(shell rpm -E "$(VERSION)-$(RPMRELEASE)")
+RPM_VERSION = $(shell echo $(VERSION) | sed 's@-\(alpha\|beta\|rc\)@~\1@')
+PKGVERSION := $(shell rpm -E "$(RPM_VERSION)-$(RPMRELEASE)")
 RPMSPEC := $(RPMNAME).spec
 RPMSRC := $(RPMNAME)-$(PKGVERSION).src.rpm
 PREBUILD := prebuild.sh
@@ -110,18 +111,18 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
 	@cp $< $@.tmp
 	sed \
-		-e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
+		-e 's/Version:\([ ]*\).*/Version: $(RPM_VERSION)/' \
 		-e 's/Release:\([ ]*\).*/Release: $(RPMRELEASE)/' \
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
-		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
+		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(RPM_VERSION)/' \
                 -re 's/(%autosetup.*)( -n \S*)(.*)/\1\3/' \
-		-e '0,/%autosetup.*/ s/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
-                -e '/%changelog/a\* $(THEDATE) $(CHANGELOG_NAME) <$(CHANGELOG_EMAIL)> - $(VERSION)-$(RELEASE)\n\- $(CHANGELOG_TEXT)\n' \
+		-e '0,/%autosetup.*/ s/%autosetup.*/%autosetup -n $(PRODUCT)-$(RPM_VERSION)/' \
+                -e '/%changelog/a\* $(THEDATE) $(CHANGELOG_NAME) <$(CHANGELOG_EMAIL)> - $(RPM_VERSION)-$(RELEASE)\n\- $(CHANGELOG_TEXT)\n' \
 		-i $@.tmp
-	grep -F "Version: $(VERSION)" $@.tmp && \
+	grep -F "Version: $(RPM_VERSION)" $@.tmp && \
 		grep -F "Release: $(RPMRELEASE)" $@.tmp && \
 		grep -F "Source0: $(TARBALL)" $@.tmp && \
-		(grep -F "%setup -q -n $(PRODUCT)-$(VERSION)" $@.tmp || \
+		(grep -F "%setup -q -n $(PRODUCT)-$(RPM_VERSION)" $@.tmp || \
 		grep -F "%autosetup" $@.tmp) || \
 		(echo "Failed to patch RPM spec" && exit 1)
 	@ mv -f $@.tmp $@
@@ -194,7 +195,7 @@ clean::
 	rm -f $(BUILDDIR)/$(RPMSRC)
 	rm -f $(BUILDDIR)/*.rpm
 	rm -f $(BUILDDIR)/build.log
-	rm -rf $(BUILDDIR)/$(RPMNAME)-$(VERSION)/
+	rm -rf $(BUILDDIR)/$(RPMNAME)-$(RPM_VERSION)/
 
-.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(VERSION)/ $(BUILDDIR)/$(RPMSRC)
+.PRECIOUS:: $(BUILDDIR)/$(RPMNAME)-$(RPM_VERSION)/ $(BUILDDIR)/$(RPMSRC)
 .PHONY: prebuild prebuild-$(OS) prebuild-$(OS)-$(DIST)

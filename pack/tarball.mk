@@ -3,7 +3,8 @@
 #
 
 ##
-TARBALL ?= $(PRODUCT)-$(VERSION).tar.$(TARBALL_COMPRESSOR)
+TARBALL_VERSION = $(shell echo $(VERSION) | sed 's@-\(alpha\|beta\|rc\)@~\1@')
+TARBALL ?= $(PRODUCT)-$(TARBALL_VERSION).tar.$(TARBALL_COMPRESSOR)
 
 #
 # Generate VERSION file
@@ -38,7 +39,7 @@ $(BUILDDIR)/$(TARBALL): $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
 		$(TARBALL_EXTRA_ARGS) \
 		--exclude=FreeBSD --exclude=debian --exclude=rpm --exclude=rump --exclude=apk \
 		--transform="s,$(BUILDDIR)/VERSION,VERSION,S" \
-		--transform="s,,$(PRODUCT)-$(VERSION)/,S" \
+		--transform="s,,$(PRODUCT)-$(TARBALL_VERSION)/,S" \
 		--owner=root --group=root \
 		-T $< --show-transformed \
 		-caPf $@ $(BUILDDIR)/VERSION $(TARBALL_EXTRA_FILES)
@@ -54,6 +55,6 @@ tarball: $(BUILDDIR)/$(TARBALL)
 clean::
 	rm -f $(BUILDDIR)/$(TARBALL)
 
-.PRECIOUS:: $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(PRODUCT)-$(VERSION)/
+.PRECIOUS:: $(BUILDDIR)/$(TARBALL) $(BUILDDIR)/$(PRODUCT)-$(TARBALL_VERSION)/
 .INTERMEDIATE:: $(BUILDDIR)/ls-lR.txt $(BUILDDIR)/VERSION
 .PHONY: clean
