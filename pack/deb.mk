@@ -129,8 +129,15 @@ $(BUILDDIR)/$(DPKG_CHANGES): $(BUILDDIR)/$(PRODUCT)-$(VERSION)/debian \
 	fi
 	sudo rm -rf /var/lib/apt/lists/
 	sudo apt-get update > /dev/null
+	# gh-7: Ubuntu/Debian should export `DEBIAN_FRONTEND=noninteractive`.
+	# `sudo` preserves not all existing environment variables by default and
+	# that's why `export DEBIAN_FRONTEND=noninteractive` doesn't affect anything
+	# while installing build dependencies actually. To propagate this setting to
+	# `sudo` we should use the special arg (--preserve-env=DEBIAN_FRONTEND), but
+	# unfortunately it is missing on Debian < 10 and Ubuntu < 16.04 due to old
+	# `sudo` version. So passing `DEBIAN_FRONTEND=noninteractive` directly.
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
-		sudo mk-build-deps -i --tool "apt-get --no-install-recommends -y" && \
+		sudo DEBIAN_FRONTEND=noninteractive mk-build-deps -i --tool "apt-get --no-install-recommends -y" && \
 		sudo rm -f *build-deps_*.deb *build-deps_*.buildinfo *build-deps_*.changes \
 	@echo
 	@echo "-------------------------------------------------------------------"
