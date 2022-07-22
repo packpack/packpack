@@ -3,6 +3,7 @@
 #
 
 DEB_VERSION:=$(VERSION)
+DEB_EPOCH:=$(shell grep '^[\ \t]*Version:' debian/control | sed -n 's/^[\ \t]*Version:[\ \t]*\([0-9]\+:\).*$$/\1/p')
 ifneq ($(shell dpkg-parsechangelog|grep ^Version|grep -E "g[abcdef0-9]{7,16}\-[0-9]+"),)
 ifneq ($(ABBREV),)
 # Add git abbreviation to follow the convention of official Debian packages
@@ -106,7 +107,7 @@ endif
 	# Bump version in debian/changelog
 	cd $(BUILDDIR)/$(PRODUCT)-$(VERSION) && \
 		NAME="$(CHANGELOG_NAME)" DEBEMAIL=$(CHANGELOG_EMAIL) \
-		dch -b -v "$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
+		dch -b -v "$(DEB_EPOCH)$(DEB_VERSION)-$(RELEASE)" "$(CHANGELOG_TEXT)"
 
 $(BUILDDIR)/$(DPKG_ORIG_TARBALL): $(BUILDDIR)/$(TARBALL)
 	# Create a symlink for orig.tar.gz
