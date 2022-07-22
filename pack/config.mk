@@ -71,6 +71,12 @@ CHANGELOG_NAME ?= PackPack
 CHANGELOG_EMAIL ?= build@tarantool.org
 CHANGELOG_TEXT ?= Automated build
 
+CHANGELOG_DIST ?= $(DIST)
+ifeq ($(CHANGELOG_DIST),)
+CHANGELOG_DIST := UNRELEASED
+endif
+
+
 # Extra arguments for tar
 TARBALL_EXTRA_ARGS ?=
 
