@@ -6,8 +6,13 @@ ifeq (,$(wildcard apk/APKBUILD))
 $(error Can't find apk/APKBUILD)
 endif
 
+ifeq ($(ABUILD_KEY),)
+  $(error ABUILD_KEY is not set, please set it to your private key)
+endif
+
 APKBUILDIN := $(wildcard apk/APKBUILD)
 APKBUILD := APKBUILD
+USER:=$(shell whoami)
 
 $(BUILDDIR)/$(APKBUILD): $(APKBUILDIN)
 	@echo "-------------------------------------------------------------------"
@@ -39,6 +44,9 @@ package: $(BUILDDIR)/$(TARBALL) \
 	@echo "Building APK packages"
 	@echo "-------------------------------------------------------------------"
 	sudo apk update
+	mkdir ~/.abuild/
+	echo "PACKAGER_PRIVKEY=/home/${USER}/.abuild/private.rsa" > ~/.abuild/abuild.conf
+	echo "$(ABUILD_KEY)" | base64 -d > ~/.abuild/private.rsa
 	rm -f $(BUILDDIR)/*/APKINDEX.tar.gz
 	rm -rf $(BUILDDIR)/src
 	cd $(BUILDDIR); abuild checksum
