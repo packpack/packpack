@@ -126,7 +126,6 @@ if [ "${OS}" = "alpine" ]; then
         echo "adduser $USER wheel";
         echo "adduser $USER abuild";
         echo "export HOME=/home/$USER" ;
-        echo "abuild-keygen -a -i -n";
         echo "su-exec $USER \$@";
     ) > ${BUILDDIR}/userwrapper.sh
 else
@@ -151,6 +150,13 @@ chmod a+x ${BUILDDIR}/userwrapper.sh
 env | grep -E "^PRODUCT=|^VERSION=|^RELEASE=|^ABBREV=" > ${BUILDDIR}/env
 env | grep -E "^TARBALL_|^CHANGELOG_|^CCACHE_|^PACKAGECLOUD_" >> ${BUILDDIR}/env
 env | grep -E "^SMPFLAGS=|^OS=|^DIST=" >> ${BUILDDIR}/env
+
+#
+# Pass the Alpine build SSL key to Docker for signing packages
+#
+if [ -n "$ABUILD_KEY" ]; then
+    echo ABUILD_KEY='"'$(echo "$ABUILD_KEY" | base64)'"' >> ${BUILDDIR}/env
+fi
 
 #
 # Pass variables with 'VAR_' prefix.
