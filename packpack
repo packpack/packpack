@@ -136,6 +136,7 @@ else
         echo "usermod -a -G sudo $USER 2>/dev/null || :";
         echo "usermod -a -G wheel $USER 2>/dev/null || :";
         echo "usermod -a -G adm $USER 2>/dev/null || :";
+        printf 'printf "%s\\tALL=(ALL)\\tNOPASSWD: ALL\\n" >> /etc/sudoers\n' $USER
         echo "export HOME=/home/$USER" ;
         echo "exec chroot --userspec=$USER / \$@";
     ) > ${BUILDDIR}/userwrapper.sh
