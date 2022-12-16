@@ -45,12 +45,12 @@ package: $(BUILDDIR)/$(TARBALL) \
 	@echo "-------------------------------------------------------------------"
 	sudo apk update
 	mkdir ~/.abuild/
-	echo "PACKAGER_PRIVKEY=/home/${USER}/.abuild/private.rsa" > ~/.abuild/abuild.conf
-	echo "$(ABUILD_KEY)" | base64 -d > ~/.abuild/private.rsa
+	echo "PACKAGER_PRIVKEY=${HOME}/.abuild/private.rsa" > ${HOME}/.abuild/abuild.conf
+	@echo "$(ABUILD_KEY)" | base64 -d > ${HOME}/.abuild/private.rsa
 	rm -f $(BUILDDIR)/*/APKINDEX.tar.gz
 	rm -rf $(BUILDDIR)/src
-	cd $(BUILDDIR); abuild checksum
-	cd $(BUILDDIR); abuild -r -P $(BUILDDIR) -s $(BUILDDIR)
+	cd $(BUILDDIR); abuild -F checksum
+	cd $(BUILDDIR); abuild -F -r -P $(BUILDDIR) -s $(BUILDDIR)
 	mv -f $(BUILDDIR)/*/*.apk $(BUILDDIR)
 	@echo "------------------------------------------------------------------"
 	@echo "APK packages are ready"
