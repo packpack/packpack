@@ -50,9 +50,15 @@ endif
 # The number of times this version of the software has been packaged.
 # This feature is not implemented yet, therefore value is always set to 1.
 #
-# Sic: Both Debian policies and Fedora guidelines discourage 0 value.
+# Sic: Both Debian policies and Fedora guidelines discourage 0 value, however
+# the Alpine documentation states that the release number should start at 0.
+# See for details: https://wiki.alpinelinux.org/wiki/APKBUILD_Reference#pkgrel
 #
+ifeq ($(OS),alpine)
+RELEASE ?= 0
+else
 RELEASE ?= 1
+endif
 
 #
 # git abbreviation with 'g' prefix, 7+ hexadecimal digits
