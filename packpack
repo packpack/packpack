@@ -18,6 +18,21 @@ DOCKER_REPO=${DOCKER_REPO:-packpack/packpack}
 # Extra parameters for docker run.
 PACKPACK_EXTRA_DOCKER_RUN_PARAMS="${PACKPACK_EXTRA_DOCKER_RUN_PARAMS:-}"
 
+# Look for podman vs docker
+# Note: if docker ever moves to rootless, this might be cleaned up
+set -e
+if type -p podman > /dev/null; then
+  # This might be needed for all SELinux installs
+  EXTRA_MOUNT=,Z
+  # This might be needed for all rootless containers
+  IS_ROOTLESS=1
+  if ! type -p docker > /dev/null; then
+    echo "Need docker command line - found podman; install podman-docker RPM."
+    false
+  fi
+fi
+set +e
+
 # Set CI variable to CI provider name
 CI=""
 if [ "${APPVEYOR:-}" = "True" -o "${APPVEYOR:-}" = "true" ]; then
@@ -117,8 +132,12 @@ esac
 # Create an entry point for Docker to allow builds from non-root user
 #
 mkdir -p ${BUILDDIR}
-
-if [ "${OS}" = "alpine" ]; then
+if [ x"${IS_ROOTLESS}" = x1 ]; then
+    (
+        echo "#!/bin/sh";
+        echo "exec \$@";
+    ) > ${BUILDDIR}/userwrapper.sh
+elif [ "${OS}" = "alpine" ]; then
     (
         echo "#!/bin/sh";
         echo "adduser -u $(id -u) -D $USER";
@@ -197,9 +216,9 @@ set -ex
 docker pull ${DOCKER_REPO}:${DOCKER_IMAGE}
 docker run \
         ${PACKPACK_EXTRA_DOCKER_RUN_PARAMS} \
-        --volume "${PACKDIR}:/pack:ro" \
-        --volume "${SOURCEDIR}:/source:ro" \
-        --volume "${BUILDDIR}:/build" \
+        --volume "${PACKDIR}:/pack:ro${EXTRA_MOUNT}" \
+        --volume "${SOURCEDIR}:/source:ro${EXTRA_MOUNT}" \
+        --volume "${BUILDDIR}:/build:rw${EXTRA_MOUNT}" \
         --env-file ${BUILDDIR}/env \
         --workdir /source \
         --rm=true --tty=true \
@@ -207,9 +226,11 @@ docker run \
         -e XDG_CACHE_HOME=/cache \
         -e CCACHE_DIR=/cache/ccache \
         -e TMPDIR=/tmp \
-        --volume "${CACHE_DIR}:/cache" \
+        -e CI=${CI} \
+        --volume "${CACHE_DIR}:/cache:rw${EXTRA_MOUNT}" \
         ${DOCKER_REPO}:${DOCKER_IMAGE} \
         make -f /pack/Makefile -C /source BUILDDIR=/build -j "$@"
+set +x
 retcode=$?
 rm -f ${BUILDDIR}/userwrapper.sh ${BUILDDIR}/env
 exit $retcode

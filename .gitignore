@@ -1,3 +1,4 @@
+build/
 root/
 *~
 debian/debhelper-build-stamp
