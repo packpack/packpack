@@ -309,6 +309,7 @@ see an example in [Tarantool GitHub](https://github.com/tarantool/tarantool) rep
    packaged (default is 1).
 * `ABBREV` - abbreviation of build metadata (default is git hash, extracted
    from `git describe`).
+* `DISABLE_ABBREV` - if set `OFF` disable abbreviation for deb packages
 *  `TARBALL_COMPRESSOR` - a compression algorithm to use, e.g. gz, bz2, xz
    (default is xz).
 * `CHANGELOG_NAME`, `CHANGELOG_EMAIL`, `CHANGELOG_TEXT` - information
