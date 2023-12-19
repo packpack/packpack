@@ -10,6 +10,10 @@ ifneq ($(ABBREV),)
 DEB_VERSION := $(VERSION).$(ABBREV)
 $(info Added git hash to Debian package version: $(VERSION) => $(DEB_VERSION))
 endif
+# Disable ABBREV for Deb packages
+ifeq ($(DISABLE_ABBREV), ON)
+DEB_VERSION := $(VERSION)
+endif
 endif
 
 DPKG_ARCH:=$(shell dpkg --print-architecture)
