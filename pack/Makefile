@@ -16,6 +16,8 @@ else ifneq (,$(wildcard /etc/alpine-release))
 include $(PACKDIR)/apk.mk
 else ifneq (,$(shell grep "^ID=\"opensuse-leap\"" /etc/os-release))
 include $(PACKDIR)/rpm.mk
+else ifneq (,$(shell grep "^ID=\"mosos-arbat\"" /etc/os-release))
+include $(PACKDIR)/rpm.mk
 else
 prepare:
 package: tarball
