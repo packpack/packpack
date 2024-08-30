@@ -314,6 +314,7 @@ see an example in [Tarantool GitHub](https://github.com/tarantool/tarantool) rep
 * `CHANGELOG_NAME`, `CHANGELOG_EMAIL`, `CHANGELOG_TEXT` - information
    used to bump version in changelog files.
 * `DOCKER_REPO` - a Docker repository to use (default is `packpack/packpack`).
+* `USE_LOCAL_IMAGE` - if not empty try to use local docker image first (by default docker image is pulled from the `DOCKER_REPO`).
 * `CCACHE*` - Config variables for ccache, such as CCACHE_DISABLE
 * `PRESERVE_ENVVARS` - a comma separated list of environment variables to
   preserve.
