@@ -40,6 +40,13 @@ ifeq ($(shell rpm -E "%{is_opensuse}"),1)
 		RPMDIST := lp152
 	endif
 	RPMRELEASE := $(RPMDIST).$(RELEASE).1
+# It seems MosOS-Arbat which is derived from openSUSE follows the same
+# approach to identify release, but uses 'at' prefix instead of 'lp'
+else ifneq (,$(shell grep "^ID=\"mosos-arbat\"" /etc/os-release))
+	ifeq ($(shell rpm -E "%{sle_version}"),150400)
+		RPMDIST := at154
+	endif
+	RPMRELEASE := $(RPMDIST).$(RELEASE).1
 endif
 
 PKGVERSION := $(shell rpm -E "$(VERSION)-$(RPMRELEASE)")
